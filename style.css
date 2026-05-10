@@ -485,4 +485,31 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 }
 .doc-file-label:hover { background: var(--gray-50); }
 
+/* ---- Multi-Select Filter ---- */
+.ms-wrap { position: relative; }
+.ms-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border: 1px solid var(--gray-200);
+  border-radius: 8px; background: white; cursor: pointer;
+  font-size: 13px; white-space: nowrap; user-select: none;
+  min-width: 118px;
+}
+.ms-btn:hover { border-color: var(--primary); }
+.ms-arrow { color: var(--gray-400); font-size: 11px; margin-left: auto; }
+.ms-lbl   { color: var(--gray-700); flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.ms-drop {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  background: white; border: 1px solid var(--gray-200);
+  border-radius: 10px; padding: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+  z-index: 500; min-width: 180px; max-height: 260px; overflow-y: auto;
+}
+.ms-opt {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; color: var(--gray-700);
+}
+.ms-opt:hover { background: var(--primary-light); color: var(--primary); }
+.ms-opt input { accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+
 .hidden { display: none !important; }

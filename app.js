@@ -15,6 +15,14 @@ const STAGE_PCT = {
   'Implementation':95, 'Resolved':100
 };
 
+const MS_CONFIGS = {
+  stage:    { placeholder: 'All Stages',   options: STAGES },
+  type:     { placeholder: 'All Types',    options: ['Support Ticket','Email Request','Verbal Request','Development CR','Testing','Others'] },
+  status:   { placeholder: 'All Status',   options: ['Open','In Progress','Pending','Resolved','Closed'] },
+  priority: { placeholder: 'All Priority', options: ['Critical','High','Medium','Low'] }
+};
+const msState = {};
+
 const DEVS  = ['Akmal','Indra','Mahmood','Razin','Jay','Joseph'];
 const IMPLS = ['Sharron - warfile','Yusuf - DB','Fikri - DB'];
 
@@ -31,12 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!API_URL) show('config-banner');
   else { loadTickets(); loadAssignees(); }
 
+  initMultiSelects();
+
   document.querySelectorAll('.stat-card').forEach(card => {
     card.addEventListener('click', () => {
       document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       const val = card.dataset.filter;
-      document.getElementById('filter-status').value = val === 'all' ? '' : val;
+      clearMs('status');
+      if (val !== 'all') setMs('status', val);
       applyFilters();
     });
   });
@@ -167,29 +178,89 @@ function renderStats(list) {
 function applyFilters() {
   const q  = document.getElementById('search').value.toLowerCase();
   const sr = document.getElementById('filter-source').value;
-  const sg = document.getElementById('filter-stage').value;
-  const ty = document.getElementById('filter-type').value;
-  const st = document.getElementById('filter-status').value;
-  const pr = document.getElementById('filter-priority').value;
+  const sg = msState.stage    || new Set();
+  const ty = msState.type     || new Set();
+  const st = msState.status   || new Set();
+  const pr = msState.priority || new Set();
   const as = document.getElementById('filter-assignee').value;
 
   renderTable(tickets.filter(t => {
     if (q  && !['Title','Description','ID','Requester','Notes','Project','Jira Ref','Change Ticket No'].some(k => (t[k]||'').toLowerCase().includes(q))) return false;
     if (sr && t.Source   !== sr) return false;
-    if (sg && t.Stage    !== sg) return false;
-    if (ty && t.Type     !== ty) return false;
-    if (st && t.Status   !== st) return false;
-    if (pr && t.Priority !== pr) return false;
+    if (sg.size && !sg.has(t.Stage    || '')) return false;
+    if (ty.size && !ty.has(t.Type     || '')) return false;
+    if (st.size && !st.has(t.Status   || '')) return false;
+    if (pr.size && !pr.has(t.Priority || '')) return false;
     if (as && t.Assignee !== as) return false;
     return true;
   }));
 }
 
 function clearFilters() {
-  ['search','filter-source','filter-stage','filter-type','filter-status','filter-priority','filter-assignee']
-    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('search').value = '';
+  document.getElementById('filter-source').value = '';
+  document.getElementById('filter-assignee').value = '';
+  ['stage','type','status','priority'].forEach(k => clearMs(k));
   document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
   renderTable(tickets);
+}
+
+// ---- Multi-Select Filters ----
+
+function initMultiSelects() {
+  Object.entries(MS_CONFIGS).forEach(([key, cfg]) => {
+    msState[key] = new Set();
+    const wrap = document.getElementById('ms-' + key);
+    if (!wrap) return;
+    wrap.innerHTML =
+      `<div class="ms-btn" onclick="toggleMs('${key}')">` +
+        `<span class="ms-lbl" id="mslbl-${key}">${cfg.placeholder}</span>` +
+        `<span class="ms-arrow">▾</span>` +
+      `</div>` +
+      `<div class="ms-drop hidden" id="msdrop-${key}">` +
+        cfg.options.map(o =>
+          `<label class="ms-opt"><input type="checkbox" value="${x(o)}" onchange="onMsChange('${key}')">${x(o)}</label>`
+        ).join('') +
+      `</div>`;
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ms-wrap'))
+      document.querySelectorAll('.ms-drop').forEach(d => d.classList.add('hidden'));
+  });
+}
+
+function toggleMs(key) {
+  const drop = document.getElementById('msdrop-' + key);
+  const isHidden = drop.classList.contains('hidden');
+  document.querySelectorAll('.ms-drop').forEach(d => d.classList.add('hidden'));
+  if (isHidden) drop.classList.remove('hidden');
+}
+
+function onMsChange(key) {
+  const drop = document.getElementById('msdrop-' + key);
+  const checked = [...drop.querySelectorAll('input:checked')].map(i => i.value);
+  msState[key] = new Set(checked);
+  const lbl = document.getElementById('mslbl-' + key);
+  lbl.textContent = checked.length === 0 ? MS_CONFIGS[key].placeholder
+    : checked.length === 1 ? checked[0]
+    : checked.length + ' selected';
+  applyFilters();
+}
+
+function setMs(key, val) {
+  msState[key] = new Set([val]);
+  const drop = document.getElementById('msdrop-' + key);
+  if (drop) drop.querySelectorAll('input').forEach(i => { i.checked = i.value === val; });
+  const lbl = document.getElementById('mslbl-' + key);
+  if (lbl) lbl.textContent = val;
+}
+
+function clearMs(key) {
+  msState[key] = new Set();
+  const drop = document.getElementById('msdrop-' + key);
+  if (drop) drop.querySelectorAll('input').forEach(i => { i.checked = false; });
+  const lbl = document.getElementById('mslbl-' + key);
+  if (lbl) lbl.textContent = MS_CONFIGS[key].placeholder;
 }
 
 // ---- Create / Edit (Manual) ----
@@ -220,15 +291,15 @@ function editTicket(id) {
   document.getElementById('f-requester').value           = t.Requester          || '';
   document.getElementById('f-description').value         = t.Description        || '';
   document.getElementById('f-notes').value               = t.Notes              || '';
-  document.getElementById('f-due-date').value            = t['Due Date']        || '';
+  document.getElementById('f-due-date').value            = toDatetimeLocal(t['Due Date']);
   document.getElementById('f-jira-ref').value            = t['Jira Ref']        || '';
   setSelectOrFirst('f-pic-dev',  t['PIC Dev']  || '');
   setSelectOrFirst('f-pic-test', t['PIC Test'] || '');
   setSelectOrFirst('f-pic-impl', t['PIC Impl'] || '');
-  document.getElementById('f-release-date').value        = t['Release Date']    || '';
+  document.getElementById('f-release-date').value        = toDatetimeLocal(t['Release Date']);
   document.getElementById('f-release-version').value     = t['Release Version'] || '';
   document.getElementById('f-change-ticket').value       = t['Change Ticket No']|| '';
-  document.getElementById('f-cab-date').value            = t['CAB Date']        || '';
+  document.getElementById('f-cab-date').value            = toDatetimeLocal(t['CAB Date']);
   document.getElementById('f-cab-status').value          = t['CAB Status']      || '';
   fillAssigneeSelect('f-assignee', t.Assignee || '');
   openModal('ticket-modal');
@@ -289,10 +360,10 @@ function openProgressModal(id) {
   setSelectOrFirst('p-pic-dev',  t['PIC Dev']  || '');
   setSelectOrFirst('p-pic-test', t['PIC Test'] || '');
   setSelectOrFirst('p-pic-impl', t['PIC Impl'] || '');
-  document.getElementById('p-release-date').value     = t['Release Date']    || '';
+  document.getElementById('p-release-date').value     = toDatetimeLocal(t['Release Date']);
   document.getElementById('p-release-version').value  = t['Release Version'] || '';
   document.getElementById('p-change-ticket').value    = t['Change Ticket No']|| '';
-  document.getElementById('p-cab-date').value         = t['CAB Date']        || '';
+  document.getElementById('p-cab-date').value         = toDatetimeLocal(t['CAB Date']);
   document.getElementById('p-cab-status').value       = t['CAB Status']      || '';
   document.getElementById('p-notes').value            = t.Notes              || '';
 
@@ -375,7 +446,14 @@ function viewTicket(id) {
     </div>`;
   }).join('');
 
-  const fmt = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt) ? d : dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); };
+  const fmt = d => {
+    if (!d) return '—';
+    const hasTime = d.length > 10;
+    const dt = new Date(hasTime ? d : d + 'T00:00:00');
+    if (isNaN(dt)) return d;
+    const dateStr = dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    return hasTime ? dateStr + ' ' + dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : dateStr;
+  };
   const cabCls = t['CAB Status']==='Approved' ? 'cab-approved' : t['CAB Status']==='Rejected' ? 'cab-rejected' : 'cab-pending';
 
   document.getElementById('detail-body').innerHTML = `
@@ -898,15 +976,26 @@ function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function show(id)       { document.getElementById(id).classList.remove('hidden'); }
 function slug(s)        { return s.toLowerCase().replace(/\s+/g, '-'); }
 
+function toDatetimeLocal(val) {
+  if (!val) return '';
+  if (val.length > 10 && val.includes('T')) return val.slice(0, 16);
+  return val + 'T00:00';
+}
+
 function dueFmt(d) {
   if (!d) return '<span style="color:#9CA3AF">—</span>';
-  const dt = new Date(d.length === 10 ? d + 'T00:00:00' : d);
+  const hasTime = d.length > 10;
+  const dt = new Date(hasTime ? d : d + 'T00:00:00');
   if (isNaN(dt)) return '<span style="color:#9CA3AF">—</span>';
-  const today = new Date(); today.setHours(0,0,0,0); dt.setHours(0,0,0,0);
-  const diff  = (dt - today) / 86400000;
-  const lbl   = dt.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
-  if (diff < 0)   return `<span class="due overdue">⚠ ${lbl}</span>`;
-  if (diff === 0) return `<span class="due today">Today</span>`;
+  const now = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dtDay = new Date(dt); dtDay.setHours(0,0,0,0);
+  const diff  = (dtDay - today) / 86400000;
+  const dateStr = dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr = hasTime ? ' ' + dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+  const lbl = dateStr + timeStr;
+  if (hasTime ? dt < now : diff < 0) return `<span class="due overdue">⚠ ${lbl}</span>`;
+  if (diff === 0) return `<span class="due today">${hasTime ? lbl : 'Today'}</span>`;
   if (diff <= 3)  return `<span class="due soon">${lbl}</span>`;
   return `<span class="due ok">${lbl}</span>`;
 }
