@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Djava-Westports Project Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="config-banner" class="config-banner hidden">
+  ⚙️ Not connected to Google Sheets.
+  <button onclick="openSettings()">Click here to set up →</button>
+</div>
+
+<header class="header">
+  <h1>📋 Djava-Westports Project Tracker</h1>
+  <div class="header-nav">
+    <button class="nav-tab active" id="tab-tickets"   onclick="showView('tickets')">📋 Tickets</button>
+    <button class="nav-tab"        id="tab-dashboard" onclick="showView('dashboard')">📊 Dashboard</button>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Refresh</button>
+    <button class="btn btn-outline btn-sm" onclick="openSettings()">⚙️ Settings</button>
+    <button class="btn btn-primary" onclick="openCreateModal()">+ New Ticket</button>
+  </div>
+</header>
+
+<main class="main">
+
+<div id="view-tickets">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card" data-filter="all">
+      <div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total</div>
+    </div>
+    <div class="stat-card" data-filter="Open">
+      <div class="stat-num c-open" id="s-open">—</div><div class="stat-lbl">Open</div>
+    </div>
+    <div class="stat-card" data-filter="In Progress">
+      <div class="stat-num c-ip" id="s-ip">—</div><div class="stat-lbl">In Progress</div>
+    </div>
+    <div class="stat-card" data-filter="Pending">
+      <div class="stat-num c-pend" id="s-pend">—</div><div class="stat-lbl">Pending</div>
+    </div>
+    <div class="stat-card" data-filter="Resolved">
+      <div class="stat-num c-res" id="s-res">—</div><div class="stat-lbl">Resolved</div>
+    </div>
+    <div class="stat-card" data-filter="Closed">
+      <div class="stat-num c-closed" id="s-closed">—</div><div class="stat-lbl">Closed</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <input id="search" type="text" class="search-input" placeholder="🔍 Search title, ID, requester, Jira ref…" oninput="applyFilters()">
+    <select id="filter-source" class="filter-select" onchange="applyFilters()">
+      <option value="">All Sources</option>
+      <option value="Jira">Jira</option>
+      <option value="Manual">Manual</option>
+    </select>
+    <select id="filter-stage" class="filter-select" onchange="applyFilters()">
+      <option value="">All Stages</option>
+      <option>Reported</option>
+      <option>Troubleshooting</option>
+      <option>Require Fix</option>
+      <option>Development</option>
+      <option>Testing</option>
+      <option>Plan for Release</option>
+      <option>Change Ticket Created</option>
+      <option>CAB Approval</option>
+      <option>Implementation</option>
+      <option>Resolved</option>
+    </select>
+    <select id="filter-type" class="filter-select" onchange="applyFilters()">
+      <option value="">All Types</option>
+      <option>Support Ticket</option>
+      <option>Email Request</option>
+      <option>Verbal Request</option>
+      <option>Development CR</option>
+      <option>Testing</option>
+      <option>Others</option>
+    </select>
+    <select id="filter-status" class="filter-select" onchange="applyFilters()">
+      <option value="">All Status</option>
+      <option>Open</option>
+      <option>In Progress</option>
+      <option>Pending</option>
+      <option>Resolved</option>
+      <option>Closed</option>
+    </select>
+    <select id="filter-priority" class="filter-select" onchange="applyFilters()">
+      <option value="">All Priority</option>
+      <option>Critical</option>
+      <option>High</option>
+      <option>Medium</option>
+      <option>Low</option>
+    </select>
+    <select id="filter-assignee" class="filter-select" onchange="applyFilters()">
+      <option value="">All Assignees</option>
+    </select>
+    <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+  </div>
+
+  <!-- Ticket List -->
+  <div class="ticket-container">
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div><p>Loading tickets…</p>
+    </div>
+    <div id="empty-state" class="empty-state hidden">
+      <div class="empty-icon">📭</div>
+      <h3>No tickets found</h3>
+      <p>Create a new ticket or adjust your filters.</p>
+      <button class="btn btn-primary btn-new" onclick="openCreateModal()">+ New Ticket</button>
+    </div>
+    <table class="ticket-table hidden" id="ticket-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Stage</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Assignee</th>
+          <th>Due Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ticket-tbody"></tbody>
+    </table>
+  </div>
+
+</div><!-- end view-tickets -->
+
+  <!-- ===== Dashboard View ===== -->
+  <div id="view-dashboard" class="hidden">
+
+    <!-- Summary row -->
+    <div class="dash-summary-row" id="dash-summary"></div>
+
+    <!-- Charts row -->
+    <div class="dash-charts-row">
+      <div class="dash-card">
+        <div class="dash-card-title">Workload by Developer</div>
+        <div class="chart-wrap"><canvas id="chart-dev"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">Tickets by Stage</div>
+        <div class="chart-wrap"><canvas id="chart-stage"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">Tickets by Status</div>
+        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Developer Cards -->
+    <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">👥 Developer Workload</div>
+    <div id="dash-dev-cards" class="dash-dev-grid"></div>
+
+    <!-- All Active Tickets Progress -->
+    <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">📋 All Active Tickets — Stage Progress</div>
+    <div class="dash-card" style="padding:0;overflow:hidden">
+      <table class="progress-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>PIC Dev</th>
+            <th>PIC Test</th>
+            <th>PIC Impl</th>
+            <th>Stage</th>
+            <th style="min-width:160px">Progress</th>
+          </tr>
+        </thead>
+        <tbody id="dash-progress-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<!-- ===== Create / Edit Modal ===== -->
+<div class="modal-overlay hidden" id="ticket-modal">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h2 id="modal-title">New Ticket</h2>
+      <button class="modal-close" onclick="closeModal('ticket-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="ticket-form" onsubmit="return false">
+        <input type="hidden" id="ticket-id">
+
+        <div class="form-section-title">Basic Information</div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Title *</label>
+            <input id="f-title" type="text" placeholder="Brief description of the issue or request" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type *</label>
+            <select id="f-type" required>
+              <option value="">Select type…</option>
+              <option>Support Ticket</option>
+              <option>Email Request</option>
+              <option>Verbal Request</option>
+              <option>Development CR</option>
+              <option>Testing</option>
+              <option>Others</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priority *</label>
+            <select id="f-priority" required>
+              <option value="">Select priority…</option>
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+              <option>Critical</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="f-status">
+              <option>Open</option>
+              <option>In Progress</option>
+              <option>Pending</option>
+              <option>Resolved</option>
+              <option>Closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Requester</label>
+            <input id="f-requester" type="text" placeholder="Who raised this?">
+          </div>
+          <div class="form-group">
+            <label>Due Date</label>
+            <input id="f-due-date" type="date">
+          </div>
+          <div class="form-group">
+            <label>Jira Reference</label>
+            <input id="f-jira-ref" type="text" placeholder="e.g. WPSCSSSUP-217">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea id="f-description" rows="2" placeholder="Details of the issue or request…"></textarea>
+          </div>
+        </div>
+
+        <div class="form-section-title">Workflow Stage</div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Current Stage</label>
+            <select id="f-stage">
+              <option>Reported</option>
+              <option>Troubleshooting</option>
+              <option>Require Fix</option>
+              <option>Development</option>
+              <option>Testing</option>
+              <option>Plan for Release</option>
+              <option>Change Ticket Created</option>
+              <option>CAB Approval</option>
+              <option>Implementation</option>
+              <option>Resolved</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section-title">Person in Charge (PIC)</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Assignee</label>
+            <select id="f-assignee"><option value="">Unassigned</option></select>
+          </div>
+          <div class="form-group">
+            <label>PIC Developer</label>
+            <select id="f-pic-dev">
+              <option value="">— Select —</option>
+              <option>Akmal</option>
+              <option>Indra</option>
+              <option>Mahmood</option>
+              <option>Razin</option>
+              <option>Jay</option>
+              <option>Joseph</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>PIC Tester</label>
+            <select id="f-pic-test">
+              <option value="">— Select —</option>
+              <option>Akmal</option>
+              <option>Indra</option>
+              <option>Mahmood</option>
+              <option>Razin</option>
+              <option>Jay</option>
+              <option>Joseph</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>PIC Implementor</label>
+            <select id="f-pic-impl">
+              <option value="">— Select —</option>
+              <option>Sharron - warfile</option>
+              <option>Yusuf - DB</option>
+              <option>Fikri - DB</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section-title">Release &amp; CAB</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Release Date</label>
+            <input id="f-release-date" type="date">
+          </div>
+          <div class="form-group">
+            <label>Release Version</label>
+            <input id="f-release-version" type="text" placeholder="e.g. 5.52.0">
+          </div>
+          <div class="form-group">
+            <label>Change Ticket No (ME)</label>
+            <input id="f-change-ticket" type="text" placeholder="e.g. ID-1791">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>CAB Date</label>
+            <input id="f-cab-date" type="date">
+          </div>
+          <div class="form-group">
+            <label>CAB Status</label>
+            <select id="f-cab-status">
+              <option value="">— Not yet —</option>
+              <option>Pending</option>
+              <option>Approved</option>
+              <option>Rejected</option>
+            </select>
+          </div>
+          <div class="form-group"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Notes</label>
+            <textarea id="f-notes" rows="2" placeholder="WAR file path, links, workarounds…"></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('ticket-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTicket()">Save Ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Detail Modal ===== -->
+<div class="modal-overlay hidden" id="detail-modal">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <div>
+        <div id="detail-id-badge" class="detail-id-badge"></div>
+        <h2 id="detail-title" style="margin-top:2px"></h2>
+      </div>
+      <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-footer" id="detail-footer"></div>
+  </div>
+</div>
+
+<!-- ===== Progress Modal (for Jira tickets) ===== -->
+<div class="modal-overlay hidden" id="progress-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div>
+        <div style="font-size:12px;color:#6B7280;margin-bottom:2px" id="prog-jira-id"></div>
+        <h2>📊 Track Progress</h2>
+      </div>
+      <button class="modal-close" onclick="closeModal('progress-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" style="margin-bottom:16px">
+        This updates your <strong>local tracker only</strong> — it does not change the ticket in Jira.
+      </p>
+
+      <div class="form-section-title">Workflow Stage</div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Current Stage</label>
+          <select id="p-stage">
+            <option>Reported</option>
+            <option>Troubleshooting</option>
+            <option>Require Fix</option>
+            <option>Development</option>
+            <option>Testing</option>
+            <option>Plan for Release</option>
+            <option>Change Ticket Created</option>
+            <option>CAB Approval</option>
+            <option>Implementation</option>
+            <option>Resolved</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-title">Person in Charge (PIC)</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>PIC Developer</label>
+          <select id="p-pic-dev">
+            <option value="">— Select —</option>
+            <option>Akmal</option>
+            <option>Indra</option>
+            <option>Mahmood</option>
+            <option>Razin</option>
+            <option>Jay</option>
+            <option>Joseph</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>PIC Tester</label>
+          <select id="p-pic-test">
+            <option value="">— Select —</option>
+            <option>Akmal</option>
+            <option>Indra</option>
+            <option>Mahmood</option>
+            <option>Razin</option>
+            <option>Jay</option>
+            <option>Joseph</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>PIC Implementor</label>
+          <select id="p-pic-impl">
+            <option value="">— Select —</option>
+            <option>Sharron - warfile</option>
+            <option>Yusuf - DB</option>
+            <option>Fikri - DB</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-title">Release &amp; CAB</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Release Date</label>
+          <input id="p-release-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>Release Version</label>
+          <input id="p-release-version" type="text" placeholder="e.g. 5.52.0">
+        </div>
+        <div class="form-group">
+          <label>Change Ticket No (ME)</label>
+          <input id="p-change-ticket" type="text" placeholder="e.g. ID-1791">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CAB Date</label>
+          <input id="p-cab-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>CAB Status</label>
+          <select id="p-cab-status">
+            <option value="">— Not yet —</option>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Rejected</option>
+          </select>
+        </div>
+        <div class="form-group"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea id="p-notes" rows="2" placeholder="WAR file path, links, remarks…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="p-delete-btn" onclick="deleteProgress()" style="margin-right:auto">Remove Tracking</button>
+      <button class="btn btn-outline" onclick="closeModal('progress-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProgress()">Save Progress</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Settings Modal ===== -->
+<div class="modal-overlay hidden" id="settings-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2>⚙️ Settings</h2>
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="settings-section">
+        <h3>Google Sheets Connection</h3>
+        <p class="text-muted">Jira tickets and manual entries are stored via Apps Script.</p>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="form-group full">
+            <label>Web App URL</label>
+            <input id="api-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="saveApiUrl()">Save & Connect</button>
+          <button class="btn btn-outline btn-sm" onclick="testConnection()">Test Connection</button>
+        </div>
+        <div id="conn-status" class="conn-status" style="margin-top:8px"></div>
+      </div>
+
+      <hr>
+
+      <div class="settings-section">
+        <h3>Team / Assignees</h3>
+        <div class="form-row" style="align-items:flex-end;margin-bottom:8px">
+          <div class="form-group">
+            <label>Name *</label>
+            <input id="new-assignee-name" type="text" placeholder="e.g. Ahmad">
+          </div>
+          <div class="form-group">
+            <label>Email (optional)</label>
+            <input id="new-assignee-email" type="email" placeholder="e.g. ahmad@company.com">
+          </div>
+          <div style="padding-bottom:1px"><button class="btn btn-primary btn-sm" onclick="addAssignee()">Add</button></div>
+        </div>
+        <div id="assignees-list" class="assignees-list"></div>
+      </div>
+
+      <hr>
+
+      <div class="settings-section">
+        <h3>Setup Instructions</h3>
+        <ol class="setup-steps">
+          <li>Open <a href="https://sheets.google.com" target="_blank">Google Sheets</a> → create a new spreadsheet</li>
+          <li>Click <strong>Extensions → Apps Script</strong></li>
+          <li>Delete all code → paste contents of <code>apps-script.gs</code> → Ctrl+S</li>
+          <li>Click <strong>Deploy → New deployment</strong> → Web app → Execute as Me → Anyone → Deploy</li>
+          <li>Copy the URL → paste above → Save & Connect</li>
+        </ol>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
