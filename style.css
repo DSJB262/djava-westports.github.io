@@ -513,3 +513,24 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .ms-opt input { accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
 
 .hidden { display: none !important; }
+
+/* ---- Hide-Resolved Toggle ---- */
+.active-filter-btn {
+  background: #EEF2FF !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  font-weight: 600;
+}
+
+/* ---- Status Log History ---- */
+.status-log-list { display: flex; flex-direction: column; gap: 4px; }
+.log-entry {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 7px 10px; background: var(--gray-50);
+  border-radius: 6px; border: 1px solid var(--gray-200); font-size: 12px;
+}
+.log-field  { font-weight: 700; min-width: 52px; }
+.log-arrow  { flex: 1; color: var(--gray-700); }
+.log-old    { color: #EF4444; }
+.log-new    { color: #059669; font-weight: 600; }
+.log-ts     { color: var(--gray-400); white-space: nowrap; font-size: 11px; }

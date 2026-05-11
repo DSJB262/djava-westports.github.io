@@ -30,7 +30,8 @@ let chartDev = null, chartStage = null, chartStatus = null;
 
 const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxSGGK0OvAmcxa-jPhJrGjlDo29olZ6ooIwCujlfWb6a352dlJ9w8cMUNMJDg_KOQZ6eQ/exec';
 
-let API_URL = localStorage.getItem('tracker_api_url') || DEFAULT_API_URL;
+let API_URL      = localStorage.getItem('tracker_api_url') || DEFAULT_API_URL;
+let hideResolved = localStorage.getItem('tracker_hide_resolved') !== 'false';
 let tickets = [], assignees = [], currentDetailId = null;
 
 // ---- Init ----
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   else { loadTickets(); loadAssignees(); }
 
   initMultiSelects();
+  syncHideResolvedBtn();
 
   document.querySelectorAll('.stat-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -185,6 +187,7 @@ function applyFilters() {
   const as = document.getElementById('filter-assignee').value;
 
   renderTable(tickets.filter(t => {
+    if (hideResolved && st.size === 0 && (t.Status === 'Resolved' || t.Status === 'Closed')) return false;
     if (q  && !['Title','Description','ID','Requester','Notes','Project','Jira Ref','Change Ticket No'].some(k => (t[k]||'').toLowerCase().includes(q))) return false;
     if (sr && t.Source   !== sr) return false;
     if (sg.size && !sg.has(t.Stage    || '')) return false;
@@ -202,7 +205,21 @@ function clearFilters() {
   document.getElementById('filter-assignee').value = '';
   ['stage','type','status','priority'].forEach(k => clearMs(k));
   document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-  renderTable(tickets);
+  applyFilters();
+}
+
+function toggleHideResolved() {
+  hideResolved = !hideResolved;
+  localStorage.setItem('tracker_hide_resolved', hideResolved);
+  syncHideResolvedBtn();
+  applyFilters();
+}
+
+function syncHideResolvedBtn() {
+  const btn = document.getElementById('btn-hide-resolved');
+  if (!btn) return;
+  btn.textContent = hideResolved ? '👁 Show Resolved' : '🙈 Hide Resolved';
+  btn.classList.toggle('active-filter-btn', hideResolved);
 }
 
 // ---- Multi-Select Filters ----
@@ -510,6 +527,9 @@ function viewTicket(id) {
     ${t.Notes ? `<div class="detail-section-title">Notes</div>
     <div class="detail-text" style="margin-bottom:12px">${x(t.Notes)}</div>` : ''}
 
+    <div class="detail-section-title">Status History</div>
+    <div id="detail-status-log"><p style="color:#9CA3AF;font-size:12px;padding:6px 0">Loading…</p></div>
+
     <div class="detail-section-title">Documents</div>
     <div id="detail-docs-list"></div>
     <div class="doc-upload-row" style="margin-top:10px">
@@ -533,9 +553,37 @@ function viewTicket(id) {
 
   openModal('detail-modal');
   loadDocuments(t.ID);
+  loadStatusLog(t.ID);
 }
 
 function editFromDetail() { closeModal('detail-modal'); editTicket(currentDetailId); }
+
+// ---- Status Log ----
+
+async function loadStatusLog(ticketId) {
+  const section = document.getElementById('detail-status-log');
+  if (!section) return;
+  try {
+    const logs = await apiGet({ action: 'getStatusLog', ticketId });
+    if (!Array.isArray(logs) || logs.length === 0) {
+      section.innerHTML = '<p style="color:#9CA3AF;font-size:12px;padding:6px 0">No history yet.</p>';
+      return;
+    }
+    const fieldColor = f => f === 'Status' ? '#4F46E5' : '#059669';
+    section.innerHTML = `<div class="status-log-list">${logs.map(l => {
+      const arrow = l['Old Value']
+        ? `<span class="log-old">${x(l['Old Value'])}</span> → <span class="log-new">${x(l['New Value'])}</span>`
+        : `<span class="log-new">${x(l['New Value'])}</span>`;
+      return `<div class="log-entry">
+        <span class="log-field" style="color:${fieldColor(l['Field'])}">${x(l['Field'])}</span>
+        <span class="log-arrow">${arrow}</span>
+        <span class="log-ts">${x(l['Timestamp'])}</span>
+      </div>`;
+    }).join('')}</div>`;
+  } catch(e) {
+    section.innerHTML = `<p style="color:#9CA3AF;font-size:12px;padding:6px 0">Could not load history.</p>`;
+  }
+}
 
 // ---- Documents ----
 
@@ -648,6 +696,39 @@ async function deleteTicket(id) {
     if (res.error) throw new Error(res.error);
     await loadTickets();
   } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ---- Email → SR-ID Tickets ----
+
+async function checkEmailTickets() {
+  const btn = document.getElementById('btn-check-email');
+  const statusEl = document.getElementById('email-check-status');
+  if (btn) { btn.textContent = '📧 Checking…'; btn.disabled = true; }
+  try {
+    const res = await apiPost({ action: 'checkEmailTickets' });
+    if (res.error) throw new Error(res.error);
+    const msg = `✓ Created: ${res.created}  Skipped: ${res.skipped}${res.errors && res.errors.length ? '  Errors: ' + res.errors.join(', ') : ''}`;
+    if (statusEl) { statusEl.textContent = msg; statusEl.style.color = '#059669'; }
+    if (res.created > 0) await loadTickets();
+  } catch(err) {
+    if (statusEl) { statusEl.textContent = '✗ ' + err.message; statusEl.style.color = '#EF4444'; }
+    else alert('Email check failed: ' + err.message);
+  } finally {
+    if (btn) { btn.textContent = '📧 Check Email'; btn.disabled = false; }
+  }
+}
+
+async function setupEmailTrigger() {
+  const statusEl = document.getElementById('email-check-status');
+  try {
+    const res = await apiPost({ action: 'setupEmailTrigger' });
+    if (res.error) throw new Error(res.error);
+    if (statusEl) { statusEl.textContent = '✓ ' + res.message; statusEl.style.color = '#059669'; }
+    else alert(res.message);
+  } catch(err) {
+    if (statusEl) { statusEl.textContent = '✗ ' + err.message; statusEl.style.color = '#EF4444'; }
+    else alert('Error: ' + err.message);
+  }
 }
 
 // ---- Assignees ----

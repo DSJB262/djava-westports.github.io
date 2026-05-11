@@ -1,0 +1,2 @@
+# Never commit the backend script — it contains API tokens
+apps-script.gs

@@ -22,6 +22,7 @@
   </div>
   <div class="header-right">
     <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Refresh</button>
+    <button class="btn btn-outline btn-sm" id="btn-check-email" onclick="checkEmailTickets()" title="Scan Gmail for SR-ID- emails">📧 Check Email</button>
     <button class="btn btn-outline btn-sm" onclick="openSettings()">⚙️ Settings</button>
     <button class="btn btn-primary" onclick="openCreateModal()">+ New Ticket</button>
   </div>
@@ -68,6 +69,7 @@
     <select id="filter-assignee" class="filter-select" onchange="applyFilters()">
       <option value="">All Assignees</option>
     </select>
+    <button id="btn-hide-resolved" class="btn btn-outline btn-sm active-filter-btn" onclick="toggleHideResolved()">👁 Show Resolved</button>
     <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
   </div>
 
@@ -501,6 +503,20 @@
           <div style="padding-bottom:1px"><button class="btn btn-primary btn-sm" onclick="addAssignee()">Add</button></div>
         </div>
         <div id="assignees-list" class="assignees-list"></div>
+      </div>
+
+      <hr>
+
+      <hr>
+
+      <div class="settings-section">
+        <h3>Email → SR-ID Auto-Ticket</h3>
+        <p class="text-muted">Scans Gmail for unread emails with <code>SR-ID-</code> in the subject and creates tickets automatically. The Gmail search runs in the context of the Google account that owns the Apps Script.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+          <button class="btn btn-outline btn-sm" onclick="checkEmailTickets()">📧 Check Now</button>
+          <button class="btn btn-outline btn-sm" onclick="setupEmailTrigger()">⏱ Enable Auto-Check (every 15 min)</button>
+        </div>
+        <div id="email-check-status" style="margin-top:8px;font-size:12px;color:#6B7280"></div>
       </div>
 
       <hr>
