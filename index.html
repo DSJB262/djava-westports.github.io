@@ -9,6 +9,38 @@
 </head>
 <body>
 
+<!-- ===== Login Overlay ===== -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">📋</div>
+    <h2 class="login-title">Djava-Westports</h2>
+    <p class="login-subtitle">Project Tracker</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Username</label>
+      <input id="login-username" type="text" placeholder="Enter username" autocomplete="username">
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Password</label>
+      <input id="login-password" type="password" placeholder="Enter password"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <button id="login-btn" class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign In</button>
+    <details class="login-setup">
+      <summary>API Configuration</summary>
+      <div class="form-group" style="margin-top:10px">
+        <label>Apps Script URL</label>
+        <input id="login-api-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:6px;width:100%" onclick="saveLoginApiUrl()">Save URL</button>
+      <p id="login-url-status" style="font-size:11px;margin-top:6px;color:#059669"></p>
+    </details>
+  </div>
+</div>
+
+<!-- ===== Main App ===== -->
+<div id="app" class="hidden">
+
 <div id="config-banner" class="config-banner hidden">
   ⚙️ Not connected to Google Sheets.
   <button onclick="openSettings()">Click here to set up →</button>
@@ -19,20 +51,22 @@
   <div class="header-nav">
     <button class="nav-tab active" id="tab-tickets"   onclick="showView('tickets')">📋 Tickets</button>
     <button class="nav-tab"        id="tab-dashboard" onclick="showView('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab"        id="tab-cab"       onclick="showView('cab')">🏛 CAB</button>
   </div>
   <div class="header-right">
+    <div class="user-badge" id="user-badge"></div>
     <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Refresh</button>
-    <button class="btn btn-outline btn-sm" id="btn-check-email" onclick="checkEmailTickets()" title="Scan Gmail for SR-ID- emails">📧 Check Email</button>
-    <button class="btn btn-outline btn-sm" onclick="openSettings()">⚙️ Settings</button>
+    <button class="btn btn-outline btn-sm" id="btn-check-email" onclick="checkEmailTickets()" title="Scan Gmail for RE- emails">📧 Check Email</button>
+    <button class="btn btn-outline btn-sm" id="btn-settings" onclick="openSettings()">⚙️ Settings</button>
     <button class="btn btn-primary" onclick="openCreateModal()">+ New Ticket</button>
   </div>
 </header>
 
 <main class="main">
 
+<!-- ===== Tickets View ===== -->
 <div id="view-tickets">
 
-  <!-- Stats -->
   <div class="stats-grid">
     <div class="stat-card" data-filter="all">
       <div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total</div>
@@ -54,7 +88,6 @@
     </div>
   </div>
 
-  <!-- Filters -->
   <div class="filters-bar">
     <input id="search" type="text" class="search-input" placeholder="🔍 Search title, ID, requester, Jira ref…" oninput="applyFilters()">
     <select id="filter-source" class="filter-select" onchange="applyFilters()">
@@ -73,7 +106,6 @@
     <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
   </div>
 
-  <!-- Ticket List -->
   <div class="ticket-container">
     <div id="loading" class="loading hidden">
       <div class="spinner"></div><p>Loading tickets…</p>
@@ -103,53 +135,76 @@
 
 </div><!-- end view-tickets -->
 
-  <!-- ===== Dashboard View ===== -->
-  <div id="view-dashboard" class="hidden">
-
-    <!-- Summary row -->
-    <div class="dash-summary-row" id="dash-summary"></div>
-
-    <!-- Charts row -->
-    <div class="dash-charts-row">
-      <div class="dash-card">
-        <div class="dash-card-title">Workload by Developer</div>
-        <div class="chart-wrap"><canvas id="chart-dev"></canvas></div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-card-title">Tickets by Stage</div>
-        <div class="chart-wrap"><canvas id="chart-stage"></canvas></div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-card-title">Tickets by Status</div>
-        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
-      </div>
+<!-- ===== Dashboard View ===== -->
+<div id="view-dashboard" class="hidden">
+  <div class="dash-summary-row" id="dash-summary"></div>
+  <div class="dash-charts-row">
+    <div class="dash-card">
+      <div class="dash-card-title">Workload by Developer</div>
+      <div class="chart-wrap"><canvas id="chart-dev"></canvas></div>
     </div>
-
-    <!-- Developer Cards -->
-    <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">👥 Developer Workload</div>
-    <div id="dash-dev-cards" class="dash-dev-grid"></div>
-
-    <!-- All Active Tickets Progress -->
-    <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">📋 All Active Tickets — Stage Progress</div>
-    <div class="dash-card" style="padding:0;overflow:hidden">
-      <table class="progress-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>PIC Dev</th>
-            <th>PIC Test</th>
-            <th>PIC Impl</th>
-            <th>Stage</th>
-            <th style="min-width:160px">Progress</th>
-          </tr>
-        </thead>
-        <tbody id="dash-progress-tbody"></tbody>
-      </table>
+    <div class="dash-card">
+      <div class="dash-card-title">Tickets by Stage</div>
+      <div class="chart-wrap"><canvas id="chart-stage"></canvas></div>
     </div>
-
+    <div class="dash-card">
+      <div class="dash-card-title">Tickets by Status</div>
+      <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+    </div>
   </div>
+  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">👥 Developer Workload</div>
+  <div id="dash-dev-cards" class="dash-dev-grid"></div>
+  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">📋 All Active Tickets — Stage Progress</div>
+  <div class="dash-card" style="padding:0;overflow:hidden">
+    <table class="progress-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Title</th><th>PIC Dev</th>
+          <th>PIC Test</th><th>PIC Impl</th><th>Stage</th>
+          <th style="min-width:160px">Progress</th>
+        </tr>
+      </thead>
+      <tbody id="dash-progress-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== CAB Submission Dashboard ===== -->
+<div id="view-cab" class="hidden">
+  <div class="cab-summary-row" id="cab-summary"></div>
+
+  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">🏛 CAB Pipeline — Change Tickets</div>
+  <div class="dash-card" style="padding:0;overflow:hidden">
+    <div id="cab-loading" class="loading" style="padding:32px">
+      <div class="spinner"></div><p>Loading CAB data…</p>
+    </div>
+    <table class="progress-table cab-table hidden" id="cab-table">
+      <thead>
+        <tr>
+          <th>Ticket</th>
+          <th>Title</th>
+          <th>Change Type</th>
+          <th>Change Ticket No</th>
+          <th>CAB Date</th>
+          <th style="text-align:center">MOP</th>
+          <th style="text-align:center">Test+Signoff</th>
+          <th style="text-align:center">ORA Form</th>
+          <th style="text-align:center">CAB Ready</th>
+          <th>CAB Status</th>
+        </tr>
+      </thead>
+      <tbody id="cab-tbody"></tbody>
+    </table>
+    <div id="cab-empty" class="empty-state hidden" style="padding:32px">
+      <div class="empty-icon">🏛</div>
+      <h3>No CAB tickets</h3>
+      <p>Tickets with a Change Ticket No or in a CAB stage will appear here.</p>
+    </div>
+  </div>
+</div>
+
 </main>
+</div><!-- end #app -->
 
 <!-- ===== Create / Edit Modal ===== -->
 <div class="modal-overlay hidden" id="ticket-modal">
@@ -229,12 +284,17 @@
           <div class="form-group full">
             <label>Current Stage</label>
             <select id="f-stage">
+              <option>Requested</option>
               <option>Reported</option>
               <option>Troubleshooting</option>
               <option>Require Fix</option>
               <option>Development</option>
+              <option>Pending Mandays</option>
+              <option>Pending Mandays Approval</option>
+              <option>Pending Revised Mandays</option>
               <option>Testing</option>
               <option>Plan for Release</option>
+              <option>Pending CR Approval</option>
               <option>Change Ticket Created</option>
               <option>CAB Approval</option>
               <option>Implementation</option>
@@ -253,34 +313,21 @@
             <label>PIC Developer</label>
             <select id="f-pic-dev">
               <option value="">— Select —</option>
-              <option>Akmal</option>
-              <option>Indra</option>
-              <option>Mahmood</option>
-              <option>Razin</option>
-              <option>Jay</option>
-              <option>Joseph</option>
+              <option>Akmal</option><option>Indra</option><option>Mahmood</option>
+              <option>Razin</option><option>Jay</option><option>Joseph</option>
             </select>
           </div>
           <div class="form-group">
             <label>PIC Tester</label>
             <select id="f-pic-test">
               <option value="">— Select —</option>
-              <option>Akmal</option>
-              <option>Indra</option>
-              <option>Mahmood</option>
-              <option>Razin</option>
-              <option>Jay</option>
-              <option>Joseph</option>
+              <option>Akmal</option><option>Indra</option><option>Mahmood</option>
+              <option>Razin</option><option>Jay</option><option>Joseph</option>
             </select>
           </div>
           <div class="form-group">
             <label>PIC Implementor</label>
-            <select id="f-pic-impl">
-              <option value="">— Select —</option>
-              <option>Sharron - warfile</option>
-              <option>Yusuf - DB</option>
-              <option>Fikri - DB</option>
-            </select>
+            <div id="f-pic-impl"></div>
           </div>
         </div>
 
@@ -301,6 +348,16 @@
         </div>
         <div class="form-row">
           <div class="form-group">
+            <label>CAB Change Type</label>
+            <select id="f-cab-change-type">
+              <option value="">— Select —</option>
+              <option>Warfile Deployment</option>
+              <option>Data Patch</option>
+              <option>DB Change</option>
+              <option>New .exe File Installation</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label>CAB Date</label>
             <input id="f-cab-date" type="datetime-local">
           </div>
@@ -313,7 +370,6 @@
               <option>Rejected</option>
             </select>
           </div>
-          <div class="form-group"></div>
         </div>
         <div class="form-row">
           <div class="form-group full">
@@ -365,12 +421,17 @@
         <div class="form-group full">
           <label>Current Stage</label>
           <select id="p-stage">
+            <option>Requested</option>
             <option>Reported</option>
             <option>Troubleshooting</option>
             <option>Require Fix</option>
             <option>Development</option>
+            <option>Pending Mandays</option>
+            <option>Pending Mandays Approval</option>
+            <option>Pending Revised Mandays</option>
             <option>Testing</option>
             <option>Plan for Release</option>
+            <option>Pending CR Approval</option>
             <option>Change Ticket Created</option>
             <option>CAB Approval</option>
             <option>Implementation</option>
@@ -385,34 +446,21 @@
           <label>PIC Developer</label>
           <select id="p-pic-dev">
             <option value="">— Select —</option>
-            <option>Akmal</option>
-            <option>Indra</option>
-            <option>Mahmood</option>
-            <option>Razin</option>
-            <option>Jay</option>
-            <option>Joseph</option>
+            <option>Akmal</option><option>Indra</option><option>Mahmood</option>
+            <option>Razin</option><option>Jay</option><option>Joseph</option>
           </select>
         </div>
         <div class="form-group">
           <label>PIC Tester</label>
           <select id="p-pic-test">
             <option value="">— Select —</option>
-            <option>Akmal</option>
-            <option>Indra</option>
-            <option>Mahmood</option>
-            <option>Razin</option>
-            <option>Jay</option>
-            <option>Joseph</option>
+            <option>Akmal</option><option>Indra</option><option>Mahmood</option>
+            <option>Razin</option><option>Jay</option><option>Joseph</option>
           </select>
         </div>
         <div class="form-group">
           <label>PIC Implementor</label>
-          <select id="p-pic-impl">
-            <option value="">— Select —</option>
-            <option>Sharron - warfile</option>
-            <option>Yusuf - DB</option>
-            <option>Fikri - DB</option>
-          </select>
+          <div id="p-pic-impl"></div>
         </div>
       </div>
 
@@ -433,6 +481,16 @@
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label>CAB Change Type</label>
+          <select id="p-cab-change-type">
+            <option value="">— Select —</option>
+            <option>Warfile Deployment</option>
+            <option>Data Patch</option>
+            <option>DB Change</option>
+            <option>New .exe File Installation</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>CAB Date</label>
           <input id="p-cab-date" type="datetime-local">
         </div>
@@ -445,7 +503,6 @@
             <option>Rejected</option>
           </select>
         </div>
-        <div class="form-group"></div>
       </div>
       <div class="form-row">
         <div class="form-group full">
@@ -507,16 +564,55 @@
 
       <hr>
 
-      <hr>
-
       <div class="settings-section">
-        <h3>Email → SR-ID Auto-Ticket</h3>
-        <p class="text-muted">Scans Gmail for unread emails with <code>SR-ID-</code> in the subject and creates tickets automatically. The Gmail search runs in the context of the Google account that owns the Apps Script.</p>
+        <h3>Email → RE-ID Auto-Ticket</h3>
+        <p class="text-muted">
+          Scans Gmail for unread emails containing <code>##RE-XXXXX##</code> in subject or body.<br>
+          • <strong>New request created with ID: ##RE-XXXXX##</strong> → creates a new ticket automatically.<br>
+          • <strong>Request with ID: ##RE-XXXXX## … has been Closed</strong> → closes the matching ticket.
+        </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
           <button class="btn btn-outline btn-sm" onclick="checkEmailTickets()">📧 Check Now</button>
-          <button class="btn btn-outline btn-sm" onclick="setupEmailTrigger()">⏱ Enable Auto-Check (every 15 min)</button>
+          <select id="email-interval-select" class="filter-select" style="font-size:12px;padding:6px 10px">
+            <option value="5">Every 5 min</option>
+            <option value="10">Every 10 min</option>
+            <option value="15" selected>Every 15 min</option>
+            <option value="30">Every 30 min</option>
+            <option value="60">Every 60 min</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="setupEmailTrigger()">⏱ Enable Auto-Check</button>
         </div>
         <div id="email-check-status" style="margin-top:8px;font-size:12px;color:#6B7280"></div>
+      </div>
+
+      <hr>
+
+      <div class="settings-section" id="section-users">
+        <h3>User Management</h3>
+        <p class="text-muted">Admin-only. Manage who can access this tracker.</p>
+        <div class="form-row" style="align-items:flex-end;margin-bottom:8px">
+          <div class="form-group">
+            <label>Username *</label>
+            <input id="new-user-username" type="text" placeholder="e.g. john">
+          </div>
+          <div class="form-group">
+            <label>Password *</label>
+            <input id="new-user-password" type="password" placeholder="Password">
+          </div>
+          <div class="form-group">
+            <label>Display Name</label>
+            <input id="new-user-display" type="text" placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="new-user-role">
+              <option value="developer">Developer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div style="padding-bottom:1px"><button class="btn btn-primary btn-sm" onclick="addUser()">Add</button></div>
+        </div>
+        <div id="users-list" class="assignees-list"></div>
       </div>
 
       <hr>
