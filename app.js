@@ -1381,7 +1381,7 @@ function renderCharts(active) {
       datasets: [{ label: 'Active Tickets', data: devCounts, backgroundColor: '#4F46E5', borderRadius: 6 }]
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
@@ -1420,7 +1420,7 @@ function renderCharts(active) {
       datasets: [{ data: statusData, backgroundColor: statusColors, borderWidth: 2 }]
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
     }
   });

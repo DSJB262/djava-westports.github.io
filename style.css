@@ -292,21 +292,18 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .dash-sum-num.c-warn { color: #D97706; }
 .dash-sum-lbl        { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
 
-.dash-charts-top {
-  display: grid; grid-template-columns: 1.6fr 0.9fr;
-  gap: 16px; margin-bottom: 16px;
+.dash-charts-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; margin-bottom: 20px;
 }
-@media(max-width:900px) { .dash-charts-top { grid-template-columns: 1fr; } }
-
-.dash-stage-card { margin-bottom: 20px; }
-.chart-wrap-stage { position: relative; height: 530px; }
+@media(max-width:1100px) { .dash-charts-row { grid-template-columns: 1fr; } }
 
 .dash-card {
   background: white; border-radius: 12px; padding: 18px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .dash-card-title { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 14px; }
-.chart-wrap { position: relative; height: 220px; }
+.chart-wrap { position: relative; height: 500px; }
 
 .dash-section-heading {
   font-size: 14px; font-weight: 700; color: var(--gray-700);
