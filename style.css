@@ -534,3 +534,94 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .log-old    { color: #EF4444; }
 .log-new    { color: #059669; font-weight: 600; }
 .log-ts     { color: var(--gray-400); white-space: nowrap; font-size: 11px; }
+
+/* ---- Login Overlay ---- */
+.login-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.login-card {
+  background: white; border-radius: 20px; padding: 40px 36px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+}
+.login-logo    { font-size: 40px; text-align: center; margin-bottom: 8px; }
+.login-title   { font-size: 22px; font-weight: 800; text-align: center; color: var(--primary); margin-bottom: 2px; }
+.login-subtitle{ font-size: 13px; color: var(--gray-500); text-align: center; margin-bottom: 24px; }
+.login-error {
+  background: #FEE2E2; color: #B91C1C;
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; margin-bottom: 12px;
+}
+.login-setup {
+  margin-top: 16px; border-top: 1px solid var(--gray-200);
+  padding-top: 12px;
+}
+.login-setup summary {
+  font-size: 12px; color: var(--gray-500); cursor: pointer;
+  user-select: none; font-weight: 600;
+}
+.login-setup summary:hover { color: var(--primary); }
+
+/* ---- User Badge (header) ---- */
+.user-badge  { display: flex; align-items: center; gap: 8px; }
+.user-info   { display: flex; align-items: center; gap: 6px; }
+.user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+.user-role-chip {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 999px; text-transform: uppercase;
+}
+.user-role-chip.admin     { background: #FEF3C7; color: #92400E; }
+.user-role-chip.developer { background: var(--primary-light); color: var(--primary); }
+
+/* ---- CAB Dashboard ---- */
+.cab-summary-row {
+  display: grid; grid-template-columns: repeat(5,1fr);
+  gap: 14px; margin-bottom: 20px;
+}
+@media(max-width:900px){ .cab-summary-row { grid-template-columns: repeat(3,1fr); } }
+
+.cab-table th, .cab-table td { font-size: 12px; }
+
+.cab-doc-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  font-size: 13px; font-weight: 700;
+}
+.cab-doc-check.ok   { background: #D1FAE5; color: #059669; }
+.cab-doc-check.miss { background: #FEE2E2; color: #B91C1C; }
+
+.cab-ready-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+}
+.cab-ready-badge.ok   { background: #D1FAE5; color: #065F46; }
+.cab-ready-badge.miss { background: #FEE2E2; color: #B91C1C; }
+
+.cab-change-type-badge {
+  display: inline-block; padding: 2px 8px;
+  background: #EDE9FE; color: #5B21B6;
+  border-radius: 6px; font-size: 11px; font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- Form Multi-Select (PIC Impl) ---- */
+.form-ms-wrap { position: relative; }
+.form-ms-wrap .ms-btn {
+  width: 100%; border-radius: 8px; min-width: unset;
+  border: 1px solid var(--gray-200);
+  padding: 8px 11px; font-size: 14px;
+}
+.form-ms-wrap .ms-btn:hover { border-color: var(--primary); }
+.form-ms-wrap .ms-drop {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  z-index: 600; min-width: 200px;
+}

@@ -3,16 +3,41 @@
 // ============================================================
 
 const STAGES = [
-  'Reported','Troubleshooting','Require Fix','Development',
-  'Testing','Plan for Release','Change Ticket Created',
-  'CAB Approval','Implementation','Resolved'
+  'Requested / Reported',
+  'Troubleshooting / Investigation',
+  'Requires Fix / Development',
+  'Pending URS',
+  'Pending Mandays Estimation',
+  'Pending Revised Mandays',
+  'Pending Mandays / CR Approval',
+  'Pending Development',
+  'Development In Progress',
+  'Pending Testing',
+  'Testing In Progress',
+  'Plan for Release',
+  'Pending CAB Approval',
+  'Implementation In Progress',
+  'Resolved',
+  'Rolled Back'
 ];
 
 const STAGE_PCT = {
-  'Reported':20, 'Troubleshooting':25, 'Require Fix':30,
-  'Development':45, 'Testing':60, 'Plan for Release':70,
-  'Change Ticket Created':75, 'CAB Approval':85,
-  'Implementation':95, 'Resolved':100
+  'Requested / Reported': 5,
+  'Troubleshooting / Investigation': 12,
+  'Requires Fix / Development': 18,
+  'Pending URS': 24,
+  'Pending Mandays Estimation': 30,
+  'Pending Revised Mandays': 36,
+  'Pending Mandays / CR Approval': 42,
+  'Pending Development': 48,
+  'Development In Progress': 55,
+  'Pending Testing': 62,
+  'Testing In Progress': 70,
+  'Plan for Release': 78,
+  'Pending CAB Approval': 85,
+  'Implementation In Progress': 92,
+  'Resolved': 100,
+  'Rolled Back': 100
 };
 
 const MS_CONFIGS = {
@@ -26,6 +51,8 @@ const msState = {};
 const DEVS  = ['Akmal','Indra','Mahmood','Razin','Jay','Joseph'];
 const IMPLS = ['Sharron - warfile','Yusuf - DB','Fikri - DB'];
 
+const CAB_CHANGE_TYPES = ['Warfile Deployment','Data Patch','DB Change','New .exe File Installation'];
+
 let chartDev = null, chartStage = null, chartStatus = null;
 
 const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxSGGK0OvAmcxa-jPhJrGjlDo29olZ6ooIwCujlfWb6a352dlJ9w8cMUNMJDg_KOQZ6eQ/exec';
@@ -34,13 +61,101 @@ let API_URL      = localStorage.getItem('tracker_api_url') || DEFAULT_API_URL;
 let hideResolved = localStorage.getItem('tracker_hide_resolved') !== 'false';
 let tickets = [], assignees = [], currentDetailId = null;
 
-// ---- Init ----
+// ============================================================
+// Auth
+// ============================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem('tracker_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function isAdmin() {
+  const u = getCurrentUser();
+  return u && u.role === 'admin';
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const loginBtn = document.getElementById('login-btn');
+  const errEl    = document.getElementById('login-error');
+
+  if (!username || !password) { showLoginError('Please enter username and password.'); return; }
+
+  if (!API_URL) { showLoginError('No API URL configured. Expand "API Configuration" below and enter your Apps Script URL first.'); return; }
+
+  loginBtn.textContent = 'Signing in…'; loginBtn.disabled = true;
+  errEl.classList.add('hidden');
+
+  try {
+    const res = await apiPost({ action: 'login', username, password });
+    if (res.error) { showLoginError(res.error); return; }
+    localStorage.setItem('tracker_user', JSON.stringify({
+      username:    res.username,
+      displayName: res.displayName,
+      role:        res.role
+    }));
+    initApp();
+  } catch(err) {
+    showLoginError('Cannot connect to server: ' + err.message);
+  } finally {
+    loginBtn.textContent = 'Sign In'; loginBtn.disabled = false;
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function saveLoginApiUrl() {
+  const url = document.getElementById('login-api-url').value.trim();
+  if (!url) return;
+  API_URL = url;
+  localStorage.setItem('tracker_api_url', url);
+  const st = document.getElementById('login-url-status');
+  st.textContent = '✓ URL saved. You can now sign in.';
+}
+
+function logout() {
+  localStorage.removeItem('tracker_user');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').classList.add('hidden');
+}
+
+function renderUserBadge() {
+  const u = getCurrentUser();
+  if (!u) return;
+  document.getElementById('user-badge').innerHTML =
+    `<span class="user-info"><span class="user-avatar">${u.displayName[0]}</span><span class="user-name">${x(u.displayName)}</span><span class="user-role-chip ${u.role}">${u.role}</span></span>
+     <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>`;
+
+  // Hide settings from non-admin users
+  if (!isAdmin()) {
+    const btn = document.getElementById('btn-settings');
+    if (btn) btn.classList.add('hidden');
+  }
+}
+
+function initApp() {
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+  renderUserBadge();
+
   if (!API_URL) show('config-banner');
   else { loadTickets(); loadAssignees(); }
 
   initMultiSelects();
+  initImplMultiSelect('f-pic-impl');
+  initImplMultiSelect('p-pic-impl');
   syncHideResolvedBtn();
 
   document.querySelectorAll('.stat-card').forEach(card => {
@@ -57,9 +172,30 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.modal-overlay').forEach(o =>
     o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); })
   );
+}
+
+// ============================================================
+// DOM Ready
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-fill API URL in login form
+  if (API_URL) {
+    const el = document.getElementById('login-api-url');
+    if (el) el.value = API_URL;
+  }
+
+  const user = getCurrentUser();
+  if (user) {
+    initApp();
+  } else {
+    document.getElementById('login-overlay').classList.remove('hidden');
+  }
 });
 
-// ---- API ----
+// ============================================================
+// API
+// ============================================================
 
 async function apiGet(params) {
   if (!API_URL) throw new Error('Not connected. Open Settings.');
@@ -72,8 +208,9 @@ async function apiGet(params) {
 }
 
 async function apiPost(data) {
-  if (!API_URL) throw new Error('Not connected. Open Settings.');
-  const res  = await fetch(API_URL, {
+  if (!API_URL && data.action !== 'login') throw new Error('Not connected. Open Settings.');
+  const url = API_URL || data._url || '';
+  const res  = await fetch(url, {
     method: 'POST', headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(data), redirect: 'follow'
   });
@@ -82,7 +219,9 @@ async function apiPost(data) {
   catch { throw new Error('Bad response from server.'); }
 }
 
-// ---- Load ----
+// ============================================================
+// Load
+// ============================================================
 
 async function loadTickets() {
   document.getElementById('loading').classList.remove('hidden');
@@ -107,7 +246,9 @@ async function loadTickets() {
   }
 }
 
-// ---- Render Table ----
+// ============================================================
+// Render Table
+// ============================================================
 
 function renderTable(list) {
   document.getElementById('loading').classList.add('hidden');
@@ -137,7 +278,7 @@ function renderTable(list) {
 
     const stage = t.Stage || '';
     const stageHtml = stage
-      ? `<span class="stage-badge">${x(stage)}</span>${t.HasProgress ? '' : ''}`
+      ? `<span class="stage-badge">${x(stage)}</span>`
       : `<span style="color:#9CA3AF;font-size:12px">Not set</span>`;
 
     const actions = isJira
@@ -175,7 +316,9 @@ function renderStats(list) {
   document.getElementById('s-closed').textContent = n('Closed');
 }
 
-// ---- Filters ----
+// ============================================================
+// Filters
+// ============================================================
 
 function applyFilters() {
   const q  = document.getElementById('search').value.toLowerCase();
@@ -222,7 +365,9 @@ function syncHideResolvedBtn() {
   btn.classList.toggle('active-filter-btn', hideResolved);
 }
 
-// ---- Multi-Select Filters ----
+// ============================================================
+// Multi-Select Filters (header bar)
+// ============================================================
 
 function initMultiSelects() {
   Object.entries(MS_CONFIGS).forEach(([key, cfg]) => {
@@ -241,7 +386,7 @@ function initMultiSelects() {
       `</div>`;
   });
   document.addEventListener('click', e => {
-    if (!e.target.closest('.ms-wrap'))
+    if (!e.target.closest('.ms-wrap') && !e.target.closest('.form-ms-wrap'))
       document.querySelectorAll('.ms-drop').forEach(d => d.classList.add('hidden'));
   });
 }
@@ -280,16 +425,81 @@ function clearMs(key) {
   if (lbl) lbl.textContent = MS_CONFIGS[key].placeholder;
 }
 
-// ---- Create / Edit (Manual) ----
+// ============================================================
+// PIC Implementor Multi-Select (form-level)
+// ============================================================
+
+function initImplMultiSelect(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.className = 'form-ms-wrap';
+  const key = 'fms-' + containerId;
+  container.innerHTML =
+    `<div class="ms-btn" onclick="toggleFormMs('${key}','${containerId}')">
+      <span class="ms-lbl" id="mslbl-${key}">— Select —</span>
+      <span class="ms-arrow">▾</span>
+    </div>
+    <div class="ms-drop hidden" id="msdrop-${key}">
+      ${IMPLS.map(o =>
+        `<label class="ms-opt"><input type="checkbox" value="${x(o)}" onchange="onFormMsChange('${key}')">${x(o)}</label>`
+      ).join('')}
+    </div>`;
+}
+
+function toggleFormMs(key, containerId) {
+  const drop = document.getElementById('msdrop-' + key);
+  const isHidden = drop.classList.contains('hidden');
+  document.querySelectorAll('.ms-drop').forEach(d => d.classList.add('hidden'));
+  if (isHidden) {
+    drop.classList.remove('hidden');
+    // Position the dropdown correctly
+    const container = document.getElementById(containerId);
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      drop.style.minWidth = Math.max(180, rect.width) + 'px';
+    }
+  }
+}
+
+function onFormMsChange(key) {
+  const drop    = document.getElementById('msdrop-' + key);
+  const checked = [...drop.querySelectorAll('input:checked')].map(i => i.value);
+  const lbl     = document.getElementById('mslbl-' + key);
+  lbl.textContent = checked.length === 0 ? '— Select —'
+    : checked.length === 1 ? checked[0]
+    : checked.length + ' selected';
+}
+
+function getFormMs(containerId) {
+  const key  = 'fms-' + containerId;
+  const drop = document.getElementById('msdrop-' + key);
+  if (!drop) return '';
+  return [...drop.querySelectorAll('input:checked')].map(i => i.value).join(', ');
+}
+
+function setFormMs(containerId, value) {
+  const key  = 'fms-' + containerId;
+  const drop = document.getElementById('msdrop-' + key);
+  if (!drop) return;
+  const vals = value ? value.split(',').map(v => v.trim()).filter(Boolean) : [];
+  drop.querySelectorAll('input').forEach(i => { i.checked = vals.includes(i.value); });
+  onFormMsChange(key);
+}
+
+// ============================================================
+// Create / Edit (Manual)
+// ============================================================
 
 function openCreateModal() {
   if (!API_URL) { openSettings(); return; }
   document.getElementById('modal-title').textContent = 'New Ticket';
   document.getElementById('ticket-id').value = '';
   document.getElementById('ticket-form').reset();
-  document.getElementById('f-status').value   = 'Open';
-  document.getElementById('f-stage').value    = 'Reported';
-  document.getElementById('f-priority').value = 'Medium';
+  document.getElementById('f-status').value        = 'Open';
+  document.getElementById('f-stage').value         = 'Requested / Reported';
+  document.getElementById('f-priority').value      = 'Medium';
+  document.getElementById('f-cab-change-type').value = '';
+  setFormMs('f-pic-impl', '');
   fillAssigneeSelect('f-assignee', '');
   openModal('ticket-modal');
 }
@@ -298,26 +508,27 @@ function editTicket(id) {
   const t = tickets.find(t => t.ID === id);
   if (!t) return;
   if (t.Source !== 'Manual') { alert(t.Source + ' tickets are read-only. Use "Track Progress" instead.'); return; }
-  document.getElementById('modal-title').textContent     = 'Edit Ticket';
-  document.getElementById('ticket-id').value             = t.ID;
-  document.getElementById('f-title').value               = t.Title              || '';
-  document.getElementById('f-type').value                = t.Type               || '';
-  document.getElementById('f-priority').value            = t.Priority           || 'Medium';
-  document.getElementById('f-status').value              = t.Status             || 'Open';
-  document.getElementById('f-stage').value               = t.Stage              || 'Reported';
-  document.getElementById('f-requester').value           = t.Requester          || '';
-  document.getElementById('f-description').value         = t.Description        || '';
-  document.getElementById('f-notes').value               = t.Notes              || '';
-  document.getElementById('f-due-date').value            = toDatetimeLocal(t['Due Date']);
-  document.getElementById('f-jira-ref').value            = t['Jira Ref']        || '';
+  document.getElementById('modal-title').textContent      = 'Edit Ticket';
+  document.getElementById('ticket-id').value              = t.ID;
+  document.getElementById('f-title').value                = t.Title              || '';
+  document.getElementById('f-type').value                 = t.Type               || '';
+  document.getElementById('f-priority').value             = t.Priority           || 'Medium';
+  document.getElementById('f-status').value               = t.Status             || 'Open';
+  document.getElementById('f-stage').value                = t.Stage              || 'Requested / Reported';
+  document.getElementById('f-requester').value            = t.Requester          || '';
+  document.getElementById('f-description').value          = t.Description        || '';
+  document.getElementById('f-notes').value                = t.Notes              || '';
+  document.getElementById('f-due-date').value             = toDatetimeLocal(t['Due Date']);
+  document.getElementById('f-jira-ref').value             = t['Jira Ref']        || '';
   setSelectOrFirst('f-pic-dev',  t['PIC Dev']  || '');
   setSelectOrFirst('f-pic-test', t['PIC Test'] || '');
-  setSelectOrFirst('f-pic-impl', t['PIC Impl'] || '');
-  document.getElementById('f-release-date').value        = toDatetimeLocal(t['Release Date']);
-  document.getElementById('f-release-version').value     = t['Release Version'] || '';
-  document.getElementById('f-change-ticket').value       = t['Change Ticket No']|| '';
-  document.getElementById('f-cab-date').value            = toDatetimeLocal(t['CAB Date']);
-  document.getElementById('f-cab-status').value          = t['CAB Status']      || '';
+  setFormMs('f-pic-impl', t['PIC Impl'] || '');
+  document.getElementById('f-release-date').value         = toDatetimeLocal(t['Release Date']);
+  document.getElementById('f-release-version').value      = t['Release Version'] || '';
+  document.getElementById('f-change-ticket').value        = t['Change Ticket No']|| '';
+  document.getElementById('f-cab-change-type').value      = t['CAB Change Type'] || '';
+  document.getElementById('f-cab-date').value             = toDatetimeLocal(t['CAB Date']);
+  document.getElementById('f-cab-status').value           = t['CAB Status']      || '';
   fillAssigneeSelect('f-assignee', t.Assignee || '');
   openModal('ticket-modal');
 }
@@ -333,25 +544,26 @@ async function saveTicket() {
 
   const ticket = {
     id,
-    'Title':              title,
-    'Type':               type,
-    'Priority':           prio,
-    'Status':             document.getElementById('f-status').value,
-    'Stage':              document.getElementById('f-stage').value,
-    'Assignee':           document.getElementById('f-assignee').value,
-    'Requester':          document.getElementById('f-requester').value.trim(),
-    'Due Date':           document.getElementById('f-due-date').value,
-    'Jira Ref':           document.getElementById('f-jira-ref').value.trim(),
-    'PIC Dev':            document.getElementById('f-pic-dev').value.trim(),
-    'PIC Test':           document.getElementById('f-pic-test').value.trim(),
-    'PIC Impl':           document.getElementById('f-pic-impl').value.trim(),
-    'Release Date':       document.getElementById('f-release-date').value,
-    'Release Version':    document.getElementById('f-release-version').value.trim(),
-    'Change Ticket No':   document.getElementById('f-change-ticket').value.trim(),
-    'CAB Date':           document.getElementById('f-cab-date').value,
-    'CAB Status':         document.getElementById('f-cab-status').value,
-    'Description':        document.getElementById('f-description').value.trim(),
-    'Notes':              document.getElementById('f-notes').value.trim()
+    'Title':            title,
+    'Type':             type,
+    'Priority':         prio,
+    'Status':           document.getElementById('f-status').value,
+    'Stage':            document.getElementById('f-stage').value,
+    'Assignee':         document.getElementById('f-assignee').value,
+    'Requester':        document.getElementById('f-requester').value.trim(),
+    'Due Date':         document.getElementById('f-due-date').value,
+    'Jira Ref':         document.getElementById('f-jira-ref').value.trim(),
+    'PIC Dev':          document.getElementById('f-pic-dev').value.trim(),
+    'PIC Test':         document.getElementById('f-pic-test').value.trim(),
+    'PIC Impl':         getFormMs('f-pic-impl'),
+    'Release Date':     document.getElementById('f-release-date').value,
+    'Release Version':  document.getElementById('f-release-version').value.trim(),
+    'Change Ticket No': document.getElementById('f-change-ticket').value.trim(),
+    'CAB Change Type':  document.getElementById('f-cab-change-type').value,
+    'CAB Date':         document.getElementById('f-cab-date').value,
+    'CAB Status':       document.getElementById('f-cab-status').value,
+    'Description':      document.getElementById('f-description').value.trim(),
+    'Notes':            document.getElementById('f-notes').value.trim()
   };
 
   const btn = document.querySelector('#ticket-modal .btn-primary');
@@ -365,26 +577,28 @@ async function saveTicket() {
   finally { btn.textContent = 'Save Ticket'; btn.disabled = false; }
 }
 
-// ---- Progress Tracking (for Jira tickets) ----
+// ============================================================
+// Progress Tracking (for Jira tickets)
+// ============================================================
 
 function openProgressModal(id) {
   const t = tickets.find(t => t.ID === id);
   if (!t) return;
   currentDetailId = id;
 
-  document.getElementById('prog-jira-id').textContent = t.ID + ' — ' + t.Title;
-  document.getElementById('p-stage').value            = t.Stage              || 'Reported';
+  document.getElementById('prog-jira-id').textContent  = t.ID + ' — ' + t.Title;
+  document.getElementById('p-stage').value              = t.Stage              || 'Requested / Reported';
   setSelectOrFirst('p-pic-dev',  t['PIC Dev']  || '');
   setSelectOrFirst('p-pic-test', t['PIC Test'] || '');
-  setSelectOrFirst('p-pic-impl', t['PIC Impl'] || '');
-  document.getElementById('p-release-date').value     = toDatetimeLocal(t['Release Date']);
-  document.getElementById('p-release-version').value  = t['Release Version'] || '';
-  document.getElementById('p-change-ticket').value    = t['Change Ticket No']|| '';
-  document.getElementById('p-cab-date').value         = toDatetimeLocal(t['CAB Date']);
-  document.getElementById('p-cab-status').value       = t['CAB Status']      || '';
-  document.getElementById('p-notes').value            = t.Notes              || '';
+  setFormMs('p-pic-impl', t['PIC Impl'] || '');
+  document.getElementById('p-release-date').value       = toDatetimeLocal(t['Release Date']);
+  document.getElementById('p-release-version').value    = t['Release Version'] || '';
+  document.getElementById('p-change-ticket').value      = t['Change Ticket No']|| '';
+  document.getElementById('p-cab-change-type').value    = t['CAB Change Type'] || '';
+  document.getElementById('p-cab-date').value           = toDatetimeLocal(t['CAB Date']);
+  document.getElementById('p-cab-status').value         = t['CAB Status']      || '';
+  document.getElementById('p-notes').value              = t.Notes              || '';
 
-  // Show/hide Remove button based on whether progress exists
   document.getElementById('p-delete-btn').style.display = t.HasProgress ? '' : 'none';
 
   closeModal('detail-modal');
@@ -398,10 +612,11 @@ async function saveProgress() {
     'Stage':            document.getElementById('p-stage').value,
     'PIC Dev':          document.getElementById('p-pic-dev').value.trim(),
     'PIC Test':         document.getElementById('p-pic-test').value.trim(),
-    'PIC Impl':         document.getElementById('p-pic-impl').value.trim(),
+    'PIC Impl':         getFormMs('p-pic-impl'),
     'Release Date':     document.getElementById('p-release-date').value,
     'Release Version':  document.getElementById('p-release-version').value.trim(),
     'Change Ticket No': document.getElementById('p-change-ticket').value.trim(),
+    'CAB Change Type':  document.getElementById('p-cab-change-type').value,
     'CAB Date':         document.getElementById('p-cab-date').value,
     'CAB Status':       document.getElementById('p-cab-status').value,
     'Notes':            document.getElementById('p-notes').value.trim()
@@ -428,7 +643,9 @@ async function deleteProgress() {
   } catch (err) { alert('Error: ' + err.message); }
 }
 
-// ---- View Detail ----
+// ============================================================
+// View Detail
+// ============================================================
 
 function viewTicket(id) {
   const t = tickets.find(t => t.ID === id);
@@ -436,13 +653,11 @@ function viewTicket(id) {
   currentDetailId = id;
   const isJira = t.Source === 'Jira';
 
-  // Badge
   document.getElementById('detail-id-badge').innerHTML = isJira
     ? `<a class="jira-id" href="${x(t.URL)}" target="_blank">${x(t.ID)}</a> <span class="src-badge src-jira">Jira</span>`
     : `<span class="manual-id">${x(t.ID)}</span> <span class="src-badge src-manual">Manual</span>`;
   document.getElementById('detail-title').textContent = t.Title;
 
-  // Footer
   document.getElementById('detail-footer').innerHTML = isJira
     ? `<button class="btn btn-outline" onclick="openProgressModal('${x(t.ID)}')" style="margin-right:auto">
          📊 ${t.HasProgress ? 'Update Progress' : 'Track Progress'}
@@ -453,7 +668,6 @@ function viewTicket(id) {
        <button class="btn btn-outline" onclick="closeModal('detail-modal')">Close</button>
        <button class="btn btn-primary" onclick="editFromDetail()">Edit</button>`;
 
-  // Pipeline
   const currentIdx = STAGES.indexOf(t.Stage || '');
   const pipeline = STAGES.map((s, i) => {
     const cls = i < currentIdx ? 'done' : i === currentIdx ? 'active' : '';
@@ -472,6 +686,10 @@ function viewTicket(id) {
     return hasTime ? dateStr + ' ' + dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : dateStr;
   };
   const cabCls = t['CAB Status']==='Approved' ? 'cab-approved' : t['CAB Status']==='Rejected' ? 'cab-rejected' : 'cab-pending';
+
+  const implDisplay = t['PIC Impl']
+    ? t['PIC Impl'].split(',').map(v => `<span class="pic-chip impl">${x(v.trim())}</span>`).join(' ')
+    : '—';
 
   document.getElementById('detail-body').innerHTML = `
     ${t.Stage || t.HasProgress ? `<div class="pipeline">${pipeline}</div>` : ''}
@@ -505,9 +723,9 @@ function viewTicket(id) {
     ${(t['PIC Dev'] || t['PIC Test'] || t['PIC Impl']) ? `
     <div class="detail-section-title">Person in Charge</div>
     <div class="detail-grid">
-      <div class="detail-field"><label>PIC Developer</label><div class="val">${x(t['PIC Dev']||'—')}</div></div>
-      <div class="detail-field"><label>PIC Tester</label><div class="val">${x(t['PIC Test']||'—')}</div></div>
-      <div class="detail-field"><label>PIC Implementor</label><div class="val">${x(t['PIC Impl']||'—')}</div></div>
+      <div class="detail-field"><label>PIC Developer</label><div class="val">${t['PIC Dev'] ? `<span class="pic-chip">${x(t['PIC Dev'])}</span>` : '—'}</div></div>
+      <div class="detail-field"><label>PIC Tester</label><div class="val">${t['PIC Test'] ? `<span class="pic-chip">${x(t['PIC Test'])}</span>` : '—'}</div></div>
+      <div class="detail-field"><label>PIC Implementor</label><div class="val">${implDisplay}</div></div>
     </div>` : ''}
 
     ${(t['Release Date'] || t['Release Version'] || t['Change Ticket No'] || t['CAB Status']) ? `
@@ -516,6 +734,7 @@ function viewTicket(id) {
       <div class="detail-field"><label>Release Date</label><div class="val">${fmt(t['Release Date'])}</div></div>
       <div class="detail-field"><label>Release Version</label><div class="val">${x(t['Release Version']||'—')}</div></div>
       <div class="detail-field"><label>Change Ticket No</label><div class="val">${x(t['Change Ticket No']||'—')}</div></div>
+      <div class="detail-field"><label>CAB Change Type</label><div class="val">${x(t['CAB Change Type']||'—')}</div></div>
       <div class="detail-field"><label>CAB Date</label><div class="val">${fmt(t['CAB Date'])}</div></div>
       <div class="detail-field"><label>CAB Status</label>
         <div class="val">${t['CAB Status'] ? `<span class="badge ${cabCls}">${x(t['CAB Status'])}</span>` : '—'}</div></div>
@@ -536,8 +755,10 @@ function viewTicket(id) {
       <select id="doc-type-select" class="filter-select" style="font-size:12px;padding:6px 8px">
         <option>URS</option>
         <option>Test Document</option>
+        <option>Test Result with Signoff</option>
         <option>DB Script</option>
         <option>MOP</option>
+        <option>Operational Risk Assessment (ORA)</option>
         <option>Release Note</option>
         <option>Sign-off</option>
         <option>Others</option>
@@ -558,7 +779,9 @@ function viewTicket(id) {
 
 function editFromDetail() { closeModal('detail-modal'); editTicket(currentDetailId); }
 
-// ---- Status Log ----
+// ============================================================
+// Status Log
+// ============================================================
 
 async function loadStatusLog(ticketId) {
   const section = document.getElementById('detail-status-log');
@@ -585,7 +808,9 @@ async function loadStatusLog(ticketId) {
   }
 }
 
-// ---- Documents ----
+// ============================================================
+// Documents
+// ============================================================
 
 async function loadDocuments(ticketId) {
   const section = document.getElementById('detail-docs-list');
@@ -641,6 +866,7 @@ async function handleFileUpload(ticketId) {
     });
     if (res.error) throw new Error(res.error);
     input.value = '';
+    document.getElementById('doc-file-name').textContent = '';
     await loadDocuments(ticketId);
   } catch(err) {
     alert('Upload failed: ' + err.message);
@@ -674,8 +900,10 @@ function updateFileName(input) {
 
 function docIcon(type) {
   const map = {
-    'URS': '📄', 'Test Document': '🧪', 'DB Script': '🗄️',
-    'MOP': '📋', 'Release Note': '📝', 'Sign-off': '✍️'
+    'URS': '📄', 'Test Document': '🧪', 'Test Result with Signoff': '✅',
+    'DB Script': '🗄️', 'MOP': '📋',
+    'Operational Risk Assessment (ORA)': '⚠️',
+    'Release Note': '📝', 'Sign-off': '✍️'
   };
   return map[type] || '📎';
 }
@@ -698,18 +926,21 @@ async function deleteTicket(id) {
   } catch (err) { alert('Error: ' + err.message); }
 }
 
-// ---- Email → SR-ID Tickets ----
+// ============================================================
+// Email → RE-ID Tickets
+// ============================================================
 
 async function checkEmailTickets() {
-  const btn = document.getElementById('btn-check-email');
+  const btn      = document.getElementById('btn-check-email');
   const statusEl = document.getElementById('email-check-status');
   if (btn) { btn.textContent = '📧 Checking…'; btn.disabled = true; }
   try {
     const res = await apiPost({ action: 'checkEmailTickets' });
     if (res.error) throw new Error(res.error);
-    const msg = `✓ Created: ${res.created}  Skipped: ${res.skipped}${res.errors && res.errors.length ? '  Errors: ' + res.errors.join(', ') : ''}`;
+    const msg = `✓ Created: ${res.created}  Closed: ${res.closed || 0}  Skipped: ${res.skipped}` +
+                (res.errors && res.errors.length ? '  Errors: ' + res.errors.join(', ') : '');
     if (statusEl) { statusEl.textContent = msg; statusEl.style.color = '#059669'; }
-    if (res.created > 0) await loadTickets();
+    if (res.created > 0 || res.closed > 0) await loadTickets();
   } catch(err) {
     if (statusEl) { statusEl.textContent = '✗ ' + err.message; statusEl.style.color = '#EF4444'; }
     else alert('Email check failed: ' + err.message);
@@ -720,8 +951,9 @@ async function checkEmailTickets() {
 
 async function setupEmailTrigger() {
   const statusEl = document.getElementById('email-check-status');
+  const interval = document.getElementById('email-interval-select').value;
   try {
-    const res = await apiPost({ action: 'setupEmailTrigger' });
+    const res = await apiPost({ action: 'setupEmailTrigger', intervalMinutes: parseInt(interval) });
     if (res.error) throw new Error(res.error);
     if (statusEl) { statusEl.textContent = '✓ ' + res.message; statusEl.style.color = '#059669'; }
     else alert(res.message);
@@ -731,7 +963,9 @@ async function setupEmailTrigger() {
   }
 }
 
-// ---- Assignees ----
+// ============================================================
+// Assignees
+// ============================================================
 
 async function loadAssignees() {
   if (!API_URL) return;
@@ -782,13 +1016,60 @@ async function removeAssignee(name) {
   } catch (err) { alert('Error: ' + err.message); }
 }
 
-// ---- Settings ----
+// ============================================================
+// User Management (admin only)
+// ============================================================
+
+async function loadUsers() {
+  try {
+    const data = await apiPost({ action: 'getUsers' });
+    if (!Array.isArray(data)) return;
+    document.getElementById('users-list').innerHTML = data.map(u =>
+      `<span class="assignee-tag">
+        ${x(u['Display Name'] || u['Username'])}
+        <span class="user-role-chip ${x(u['Role'])}" style="font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px">${x(u['Role'])}</span>
+        ${u['Username'] !== 'admin' ? `<button onclick="removeUser('${x(u['Username'])}')" title="Remove">✕</button>` : ''}
+      </span>`
+    ).join('');
+  } catch(e) { console.warn('Users:', e.message); }
+}
+
+async function addUser() {
+  const username = document.getElementById('new-user-username').value.trim();
+  const password = document.getElementById('new-user-password').value;
+  const display  = document.getElementById('new-user-display').value.trim();
+  const role     = document.getElementById('new-user-role').value;
+  if (!username || !password) { alert('Username and password are required'); return; }
+  try {
+    const res = await apiPost({ action: 'addUser', user: { username, password, displayName: display, role } });
+    if (res.error) throw new Error(res.error);
+    document.getElementById('new-user-username').value = '';
+    document.getElementById('new-user-password').value = '';
+    document.getElementById('new-user-display').value  = '';
+    await loadUsers();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function removeUser(username) {
+  if (!confirm(`Remove user "${username}"?`)) return;
+  try {
+    const res = await apiPost({ action: 'removeUser', username });
+    if (res.error) throw new Error(res.error);
+    await loadUsers();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ============================================================
+// Settings
+// ============================================================
 
 function openSettings() {
+  if (!isAdmin()) { alert('Settings are only accessible to admin users.'); return; }
   document.getElementById('api-url').value = API_URL;
   document.getElementById('conn-status').textContent = '';
   document.getElementById('conn-status').className   = 'conn-status';
   renderAssigneesList();
+  loadUsers();
   openModal('settings-modal');
 }
 
@@ -822,7 +1103,9 @@ function setStatus(msg, cls) {
   el.textContent = msg; el.className = 'conn-status' + (cls ? ' ' + cls : '');
 }
 
-// ---- Banners ----
+// ============================================================
+// Banners
+// ============================================================
 
 function showBanner(id, icon, msg, bg, color) {
   let el = document.getElementById(id);
@@ -837,21 +1120,117 @@ function showBanner(id, icon, msg, bg, color) {
 
 function hideBanner(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-// ---- View Switching ----
+// ============================================================
+// View Switching
+// ============================================================
 
 function showView(view) {
-  document.getElementById('view-tickets').classList.toggle('hidden', view !== 'tickets');
-  document.getElementById('view-dashboard').classList.toggle('hidden', view !== 'dashboard');
-  document.getElementById('tab-tickets').classList.toggle('active', view === 'tickets');
-  document.getElementById('tab-dashboard').classList.toggle('active', view === 'dashboard');
+  ['tickets','dashboard','cab'].forEach(v => {
+    document.getElementById('view-' + v).classList.toggle('hidden', view !== v);
+    document.getElementById('tab-'  + v).classList.toggle('active', view === v);
+  });
   if (view === 'dashboard') renderDashboard();
+  if (view === 'cab')       loadCabDashboard();
 }
 
-// ---- Dashboard ----
+// ============================================================
+// CAB Dashboard
+// ============================================================
+
+async function loadCabDashboard() {
+  const loadEl  = document.getElementById('cab-loading');
+  const tableEl = document.getElementById('cab-table');
+  const emptyEl = document.getElementById('cab-empty');
+  loadEl.classList.remove('hidden');
+  tableEl.classList.add('hidden');
+  emptyEl.classList.add('hidden');
+
+  try {
+    const data = await apiGet({ action: 'getCabDashboard' });
+    if (data.error) throw new Error(data.error);
+    const list = Array.isArray(data) ? data : [];
+    loadEl.classList.add('hidden');
+    renderCabSummary(list);
+    renderCabTable(list, tableEl, emptyEl);
+  } catch(err) {
+    loadEl.classList.add('hidden');
+    emptyEl.querySelector('h3').textContent = 'Could not load CAB data';
+    emptyEl.querySelector('p').textContent  = err.message;
+    emptyEl.classList.remove('hidden');
+  }
+}
+
+function renderCabSummary(list) {
+  const total   = list.length;
+  const ready   = list.filter(t => t['CAB Ready']).length;
+  const pending = list.filter(t => t['CAB Status'] === 'Pending').length;
+  const approved= list.filter(t => t['CAB Status'] === 'Approved').length;
+  const missDocs= list.filter(t => !t['CAB Ready']).length;
+
+  document.getElementById('cab-summary').innerHTML = [
+    { n: total,    l: 'CAB Tickets',     c: '' },
+    { n: ready,    l: 'CAB Ready',       c: 'c-res' },
+    { n: missDocs, l: 'Missing Docs',    c: 'c-crit' },
+    { n: pending,  l: 'Pending CAB',     c: 'c-pend' },
+    { n: approved, l: 'CAB Approved',    c: 'c-res' }
+  ].map(s => `
+    <div class="dash-sum-card">
+      <div class="dash-sum-num ${s.c}">${s.n}</div>
+      <div class="dash-sum-lbl">${s.l}</div>
+    </div>`).join('');
+}
+
+function renderCabTable(list, tableEl, emptyEl) {
+  if (!list.length) { emptyEl.classList.remove('hidden'); return; }
+  tableEl.classList.remove('hidden');
+
+  const doc = (has, label) =>
+    `<span class="cab-doc-check ${has ? 'ok' : 'miss'}" title="${has ? label + ' uploaded' : label + ' missing'}">
+      ${has ? '✓' : '✗'}
+    </span>`;
+
+  const cabCls = s => s === 'Approved' ? 'cab-approved' : s === 'Rejected' ? 'cab-rejected' : s ? 'cab-pending' : '';
+
+  const fmt = d => {
+    if (!d) return '—';
+    const dt = new Date(d.length > 10 ? d : d + 'T00:00:00');
+    return isNaN(dt) ? d : dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  };
+
+  document.getElementById('cab-tbody').innerHTML = list.map(t => {
+    const isJira = t.Source === 'Jira';
+    const idCell = isJira
+      ? `<a class="jira-id" href="${x(t.URL)}" target="_blank">${x(t.ID)}</a>`
+      : `<span class="manual-id">${x(t.ID)}</span>`;
+
+    return `<tr>
+      <td class="id-cell">${idCell} ${isJira ? '<span class="src-badge src-jira">Jira</span>' : '<span class="src-badge src-manual">Manual</span>'}</td>
+      <td>
+        <div class="t-title" onclick="viewTicket('${x(t.ID)}');showView('tickets')">${x(t.Title)}</div>
+        <div class="t-sub">${x(t.Stage || '')}</div>
+      </td>
+      <td>${t['CAB Change Type'] ? `<span class="cab-change-type-badge">${x(t['CAB Change Type'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+      <td>${x(t['Change Ticket No'] || '—')}</td>
+      <td>${fmt(t['CAB Date'])}</td>
+      <td style="text-align:center">${doc(t['Doc MOP'], 'MOP')}</td>
+      <td style="text-align:center">${doc(t['Doc Test Result'], 'Test Result + Signoff')}</td>
+      <td style="text-align:center">${doc(t['Doc ORA'], 'ORA Form')}</td>
+      <td style="text-align:center">
+        ${t['CAB Ready']
+          ? `<span class="cab-ready-badge ok">✓ Ready</span>`
+          : `<span class="cab-ready-badge miss">✗ Not Ready</span>`}
+      </td>
+      <td>${t['CAB Status'] ? `<span class="badge ${cabCls(t['CAB Status'])}">${x(t['CAB Status'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// Dashboard
+// ============================================================
 
 function renderDashboard() {
   const active = tickets.filter(t => t.Status !== 'Closed' && t.Status !== 'Resolved');
-
   renderDashSummary(active);
   renderDevCards(active);
   renderProgressTable(active);
@@ -887,7 +1266,8 @@ function renderDevCards(active) {
   const grid = document.getElementById('dash-dev-cards');
   const cards = DEVS.map(dev => {
     const devTickets = active.filter(t =>
-      t['PIC Dev'] === dev || t['PIC Test'] === dev || t.Assignee === dev
+      t['PIC Dev'] === dev || t['PIC Test'] === dev || t.Assignee === dev ||
+      (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
     );
     if (!devTickets.length) return `
       <div class="dev-card dev-card-empty">
@@ -900,6 +1280,7 @@ function renderDevCards(active) {
       const pct  = STAGE_PCT[t.Stage] || 0;
       const role = t['PIC Dev'] === dev ? '🔨 Dev'
                  : t['PIC Test'] === dev ? '🧪 Test'
+                 : (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev) ? '⚙ Impl'
                  : '📌 Assigned';
       const pCls = 'p-' + slug(t.Priority || '');
       return `
@@ -939,10 +1320,8 @@ function renderDevCards(active) {
 }
 
 function renderProgressTable(active) {
-  const tbody = document.getElementById('dash-progress-tbody');
-  const sorted = [...active].sort((a, b) => {
-    return (STAGE_PCT[b.Stage] || 0) - (STAGE_PCT[a.Stage] || 0);
-  });
+  const tbody  = document.getElementById('dash-progress-tbody');
+  const sorted = [...active].sort((a, b) => (STAGE_PCT[b.Stage] || 0) - (STAGE_PCT[a.Stage] || 0));
 
   if (!sorted.length) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9CA3AF;padding:20px">No active tickets</td></tr>`;
@@ -950,12 +1329,17 @@ function renderProgressTable(active) {
   }
 
   tbody.innerHTML = sorted.map(t => {
-    const pct  = STAGE_PCT[t.Stage] || 0;
-    const sCls = 's-' + slug(t.Status || '');
+    const pct    = STAGE_PCT[t.Stage] || 0;
+    const sCls   = 's-' + slug(t.Status || '');
     const isJira = t.Source === 'Jira';
     const idHtml = isJira
       ? `<a class="jira-id" href="${x(t.URL)}" target="_blank">${x(t.ID)}</a>`
       : `<span class="manual-id">${x(t.ID)}</span>`;
+
+    const implChips = t['PIC Impl']
+      ? t['PIC Impl'].split(',').map(v => `<span class="pic-chip impl" style="font-size:10px">${x(v.trim())}</span>`).join(' ')
+      : '<span style="color:#9CA3AF">—</span>';
+
     return `
       <tr>
         <td class="id-cell">${idHtml}</td>
@@ -965,7 +1349,7 @@ function renderProgressTable(active) {
         </td>
         <td>${t['PIC Dev']  ? `<span class="pic-chip">${x(t['PIC Dev'])}</span>`  : '<span style="color:#9CA3AF">—</span>'}</td>
         <td>${t['PIC Test'] ? `<span class="pic-chip">${x(t['PIC Test'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
-        <td>${t['PIC Impl'] ? `<span class="pic-chip impl">${x(t['PIC Impl'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+        <td>${implChips}</td>
         <td><span class="stage-badge">${x(t.Stage || 'Not set')}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:8px">
@@ -980,25 +1364,21 @@ function renderProgressTable(active) {
 }
 
 function renderCharts(active) {
-  // Destroy existing charts
   if (chartDev)    { chartDev.destroy();    chartDev    = null; }
   if (chartStage)  { chartStage.destroy();  chartStage  = null; }
   if (chartStatus) { chartStatus.destroy(); chartStatus = null; }
 
-  // Chart 1: Workload by Developer
   const devCounts = DEVS.map(dev =>
-    active.filter(t => t['PIC Dev'] === dev || t['PIC Test'] === dev || t.Assignee === dev).length
+    active.filter(t =>
+      t['PIC Dev'] === dev || t['PIC Test'] === dev || t.Assignee === dev ||
+      (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
+    ).length
   );
   chartDev = new Chart(document.getElementById('chart-dev'), {
     type: 'bar',
     data: {
       labels: DEVS,
-      datasets: [{
-        label: 'Active Tickets',
-        data: devCounts,
-        backgroundColor: '#4F46E5',
-        borderRadius: 6
-      }]
+      datasets: [{ label: 'Active Tickets', data: devCounts, backgroundColor: '#4F46E5', borderRadius: 6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: true,
@@ -1007,33 +1387,26 @@ function renderCharts(active) {
     }
   });
 
-  // Chart 2: Tickets by Stage
   const stageCounts = STAGES.map(s => active.filter(t => t.Stage === s).length);
   const noStageCnt  = active.filter(t => !t.Stage).length;
+  const stageColors = [
+    '#E0E7FF','#C7D2FE','#A5B4FC','#818CF8','#6366F1',
+    '#4F46E5','#4338CA','#3730A3','#312E81','#1E1B4B',
+    '#059669','#10B981','#34D399','#6EE7B7','#065F46','#F59E0B','#9CA3AF'
+  ];
   chartStage = new Chart(document.getElementById('chart-stage'), {
     type: 'bar',
     data: {
       labels: [...STAGES, 'Not Set'],
-      datasets: [{
-        label: 'Tickets',
-        data: [...stageCounts, noStageCnt],
-        backgroundColor: [
-          '#E0E7FF','#C7D2FE','#A5B4FC','#818CF8',
-          '#6366F1','#4F46E5','#4338CA','#3730A3',
-          '#312E81','#10B981','#9CA3AF'
-        ],
-        borderRadius: 4
-      }]
+      datasets: [{ label: 'Tickets', data: [...stageCounts, noStageCnt], backgroundColor: stageColors, borderRadius: 4 }]
     },
     options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: true,
+      indexAxis: 'y', responsive: true, maintainAspectRatio: true,
       plugins: { legend: { display: false } },
       scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
   });
 
-  // Chart 3: Tickets by Status
   const statusLabels = ['Open','In Progress','Pending','Resolved','Closed'];
   const statusColors = ['#3B82F6','#F59E0B','#8B5CF6','#10B981','#9CA3AF'];
   const statusData   = statusLabels.map(s => tickets.filter(t => t.Status === s).length);
@@ -1050,7 +1423,9 @@ function renderCharts(active) {
   });
 }
 
-// ---- Modal & Utils ----
+// ============================================================
+// Modal & Utils
+// ============================================================
 
 function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -1081,7 +1456,6 @@ function dueFmt(d) {
   return `<span class="due ok">${lbl}</span>`;
 }
 
-// Set a select value; falls back to empty if value not in options
 function setSelectOrFirst(id, value) {
   const sel = document.getElementById(id);
   if (!sel) return;
