@@ -1401,9 +1401,12 @@ function renderCharts(active) {
       datasets: [{ label: 'Tickets', data: [...stageCounts, noStageCnt], backgroundColor: stageColors, borderRadius: 4 }]
     },
     options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: true,
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      scales: {
+        x: { beginAtZero: true, ticks: { stepSize: 1 } },
+        y: { ticks: { font: { size: 11 }, autoSkip: false } }
+      }
     }
   });
 

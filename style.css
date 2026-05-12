@@ -292,12 +292,14 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .dash-sum-num.c-warn { color: #D97706; }
 .dash-sum-lbl        { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
 
-.dash-charts-row {
-  display: grid; grid-template-columns: 1fr 1.4fr 0.8fr;
-  gap: 16px; margin-bottom: 20px;
+.dash-charts-top {
+  display: grid; grid-template-columns: 1.6fr 0.9fr;
+  gap: 16px; margin-bottom: 16px;
 }
-@media(max-width:1100px){ .dash-charts-row { grid-template-columns: 1fr 1fr; } }
-@media(max-width:700px) { .dash-charts-row { grid-template-columns: 1fr; } }
+@media(max-width:900px) { .dash-charts-top { grid-template-columns: 1fr; } }
+
+.dash-stage-card { margin-bottom: 20px; }
+.chart-wrap-stage { position: relative; height: 530px; }
 
 .dash-card {
   background: white; border-radius: 12px; padding: 18px;
@@ -306,13 +308,18 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .dash-card-title { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 14px; }
 .chart-wrap { position: relative; height: 220px; }
 
+.dash-section-heading {
+  font-size: 14px; font-weight: 700; color: var(--gray-700);
+  margin: 20px 0 12px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--gray-100);
+}
+
 /* ---- Developer Cards ---- */
 .dash-dev-grid {
-  display: grid; grid-template-columns: repeat(3,1fr);
+  display: grid; grid-template-columns: repeat(2,1fr);
   gap: 16px; margin-bottom: 20px;
 }
-@media(max-width:1100px){ .dash-dev-grid { grid-template-columns: repeat(2,1fr); } }
-@media(max-width:600px) { .dash-dev-grid { grid-template-columns: 1fr; } }
+@media(max-width:700px) { .dash-dev-grid { grid-template-columns: 1fr; } }
 
 .dev-card {
   background: white; border-radius: 12px; padding: 16px;
@@ -347,7 +354,7 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .dev-ticket-id    { font-size: 10px; font-family: monospace; color: var(--gray-400); }
 .dev-role-tag     { font-size: 10px; background: var(--gray-200); color: var(--gray-600); padding: 1px 6px; border-radius: 4px; margin-left: auto; }
 .dev-ticket-title { font-size: 12px; font-weight: 600; color: var(--gray-900); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dev-ticket-stage { font-size: 10px; color: var(--primary); font-weight: 600; margin-bottom: 5px; }
+.dev-ticket-stage { font-size: 10px; color: var(--primary); font-weight: 600; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prog-pct         { font-size: 10px; font-weight: 700; color: var(--gray-500); text-align: right; margin-top: 2px; }
 
 /* ---- Progress bar ---- */

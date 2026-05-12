@@ -138,23 +138,27 @@
 <!-- ===== Dashboard View ===== -->
 <div id="view-dashboard" class="hidden">
   <div class="dash-summary-row" id="dash-summary"></div>
-  <div class="dash-charts-row">
+
+  <div class="dash-charts-top">
     <div class="dash-card">
       <div class="dash-card-title">Workload by Developer</div>
       <div class="chart-wrap"><canvas id="chart-dev"></canvas></div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-card-title">Tickets by Stage</div>
-      <div class="chart-wrap"><canvas id="chart-stage"></canvas></div>
     </div>
     <div class="dash-card">
       <div class="dash-card-title">Tickets by Status</div>
       <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
     </div>
   </div>
-  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">👥 Developer Workload</div>
+
+  <div class="dash-card dash-stage-card">
+    <div class="dash-card-title">Tickets by Stage</div>
+    <div class="chart-wrap-stage"><canvas id="chart-stage"></canvas></div>
+  </div>
+
+  <div class="dash-section-heading">👥 Developer Workload</div>
   <div id="dash-dev-cards" class="dash-dev-grid"></div>
-  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">📋 All Active Tickets — Stage Progress</div>
+
+  <div class="dash-section-heading">📋 All Active Tickets — Stage Progress</div>
   <div class="dash-card" style="padding:0;overflow:hidden">
     <table class="progress-table">
       <thead>
