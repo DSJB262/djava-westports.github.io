@@ -18,24 +18,43 @@
     <p class="login-subtitle">Project Tracker</p>
     <div class="form-group" style="margin-bottom:12px">
       <label>Username</label>
-      <input id="login-username" type="text" placeholder="Enter username" autocomplete="username">
+      <div class="input-wrap">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <input id="login-username" type="text" placeholder="Enter username" autocomplete="username">
+      </div>
     </div>
     <div class="form-group" style="margin-bottom:12px">
       <label>Password</label>
-      <input id="login-password" type="password" placeholder="Enter password"
-             onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="input-wrap">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <input id="login-password" type="password" placeholder="Enter password"
+               onkeydown="if(event.key==='Enter')doLogin()">
+        <button type="button" class="pw-toggle" id="pw-toggle-btn" onclick="togglePassword()" title="Show/hide password">
+          <svg id="pw-eye" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div id="login-error" class="login-error hidden"></div>
-    <button id="login-btn" class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign In</button>
+    <button id="login-btn" class="btn btn-primary" onclick="doLogin()">Sign In</button>
     <details class="login-setup">
-      <summary>API Configuration</summary>
-      <div class="form-group" style="margin-top:10px">
-        <label>Apps Script URL</label>
-        <input id="login-api-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+      <summary>⚙ API Configuration</summary>
+      <div class="setup-inner">
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Apps Script URL</label>
+          <input id="login-api-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="saveLoginApiUrl()">Save URL</button>
+        <p id="login-url-status" style="font-size:11px;margin-top:6px;color:#059669"></p>
       </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:6px;width:100%" onclick="saveLoginApiUrl()">Save URL</button>
-      <p id="login-url-status" style="font-size:11px;margin-top:6px;color:#059669"></p>
     </details>
+    <div class="login-footer">
+      Version 1.0.0 &nbsp;·&nbsp; © Westports IT<br>
+      Powered by dJava Factory
+    </div>
   </div>
 </div>
 

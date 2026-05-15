@@ -540,34 +540,106 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .log-ts     { color: var(--gray-400); white-space: nowrap; font-size: 11px; }
 
 /* ---- Login Overlay ---- */
+/* === LOGIN OVERLAY === */
 .login-overlay {
   position: fixed; inset: 0; z-index: 2000;
-  background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%);
+  background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
   display: flex; align-items: center; justify-content: center;
-  padding: 24px;
+  padding: 24px; overflow: hidden;
 }
+.login-overlay::before {
+  content: ''; position: absolute;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  top: -150px; left: -150px; filter: blur(80px); pointer-events: none;
+}
+.login-overlay::after {
+  content: ''; position: absolute;
+  width: 350px; height: 350px; border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  bottom: -100px; right: -80px; filter: blur(60px); pointer-events: none;
+}
+
 .login-card {
-  background: white; border-radius: 20px; padding: 40px 36px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px);
+  border-radius: 20px; padding: 30px 36px 24px;
   width: 100%; max-width: 400px;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.3);
+  position: relative;
 }
-.login-logo    { font-size: 40px; text-align: center; margin-bottom: 8px; }
-.login-title   { font-size: 22px; font-weight: 800; text-align: center; color: var(--primary); margin-bottom: 2px; }
-.login-subtitle{ font-size: 13px; color: var(--gray-500); text-align: center; margin-bottom: 24px; }
+
+.login-logo    { text-align: center; margin-bottom: 10px; margin-top: 0; }
+.login-title   { font-size: 20px; font-weight: 700; letter-spacing: 0.2px; text-align: center; color: var(--primary); margin-bottom: 2px; }
+.login-subtitle{ font-size: 13px; color: var(--gray-500); text-align: center; margin-bottom: 20px; }
+
 .login-error {
   background: #FEE2E2; color: #B91C1C;
   border-radius: 8px; padding: 8px 12px;
   font-size: 12px; margin-bottom: 12px;
 }
+
+/* Input icon wrapper */
+.input-wrap { position: relative; }
+.input-wrap .input-icon {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  color: var(--gray-400); pointer-events: none; display: flex;
+}
+.input-wrap input { padding-left: 36px !important; }
+.pw-toggle {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--gray-400); padding: 4px; line-height: 1; display: flex; align-items: center;
+}
+.pw-toggle:hover { color: var(--primary); }
+
+/* Input focus glow */
+.login-card .form-group input:focus {
+  border-color: #4F46E5 !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15) !important;
+  outline: none;
+}
+
+/* Sign In button */
+#login-btn {
+  width: 100%; margin-top: 6px; padding: 11px;
+  font-size: 15px; border-radius: 10px;
+  background: linear-gradient(135deg, #4F46E5, #4338ca);
+  transition: all 0.2s;
+}
+#login-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338ca, #3730a3);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(79,70,229,0.4);
+}
+#login-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+#login-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* API Config */
 .login-setup {
-  margin-top: 16px; border-top: 1px solid var(--gray-200);
-  padding-top: 12px;
+  margin-top: 14px; border-top: 1px solid var(--gray-200); padding-top: 10px;
 }
 .login-setup summary {
   font-size: 12px; color: var(--gray-500); cursor: pointer;
-  user-select: none; font-weight: 600;
+  user-select: none; font-weight: 600; list-style: none;
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 8px; border-radius: 7px; transition: background 0.15s;
 }
-.login-setup summary:hover { color: var(--primary); }
+.login-setup summary::-webkit-details-marker { display: none; }
+.login-setup summary:hover { background: var(--gray-100); color: var(--primary); }
+.login-setup[open] .setup-inner {
+  background: var(--gray-50); border-radius: 8px; padding: 10px; margin-top: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+/* Footer */
+.login-footer {
+  margin-top: 16px; padding-top: 12px;
+  border-top: 1px solid var(--gray-100);
+  text-align: center; font-size: 10px;
+  color: var(--gray-400); line-height: 1.7;
+}
 
 /* ---- User Badge (header) ---- */
 .user-badge  { display: flex; align-items: center; gap: 8px; }
