@@ -581,7 +581,9 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 }
 
 /* Input icon wrapper */
-.input-wrap { position: relative; }
+.input-wrap { position: relative; width: 100%; }
+.login-card .form-group { width: 100%; }
+.login-card .form-group input { width: 100%; box-sizing: border-box; }
 .input-wrap .input-icon {
   position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
   color: var(--gray-400); pointer-events: none; display: flex;
