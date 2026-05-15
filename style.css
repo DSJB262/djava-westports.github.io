@@ -55,6 +55,20 @@ body {
 @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(3,1fr); } }
 @media (max-width:  600px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
 
+/* ---- Ticket table scroll wrap ---- */
+.table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ticket-table th, .ticket-table td { white-space: nowrap; }
+
+/* ---- Age badge ---- */
+.age-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.age-ok   { background: #D1FAE5; color: #065F46; }
+.age-warn { background: #FEF3C7; color: #92400E; }
+.age-old  { background: #FEE2E2; color: #991B1B; }
+
+/* ---- CAB missing item ---- */
+.miss-item    { display: inline-block; background: #FEE2E2; color: #B91C1C; border-radius: 6px; padding: 1px 7px; font-size: 11px; font-weight: 600; margin: 1px 2px; }
+.miss-item-ok { color: #059669; font-size: 12px; font-weight: 600; }
+
 .stat-card {
   background: white; border-radius: 12px; padding: 18px 16px;
   text-align: center; cursor: pointer; border: 2px solid transparent;
@@ -276,10 +290,11 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 
 /* ---- Dashboard ---- */
 .dash-summary-row {
-  display: grid; grid-template-columns: repeat(6,1fr);
+  display: grid; grid-template-columns: repeat(5,1fr);
   gap: 14px; margin-bottom: 20px;
 }
-@media(max-width:900px){ .dash-summary-row { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:1200px){ .dash-summary-row { grid-template-columns: repeat(4,1fr); } }
+@media(max-width:900px) { .dash-summary-row { grid-template-columns: repeat(3,1fr); } }
 .dash-sum-card {
   background: white; border-radius: 12px; padding: 16px;
   text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
@@ -290,6 +305,7 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .dash-sum-num.c-pend { color: #7C3AED; }
 .dash-sum-num.c-crit { color: #DC2626; }
 .dash-sum-num.c-warn { color: #D97706; }
+.dash-sum-num.c-res  { color: #059669; }
 .dash-sum-lbl        { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .dash-charts-row {
@@ -702,4 +718,49 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .form-ms-wrap .ms-drop {
   position: absolute; top: calc(100% + 4px); left: 0;
   z-index: 600; min-width: 200px;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .main { padding: 12px; }
+
+  /* Header */
+  .header { flex-wrap: wrap; gap: 6px; padding: 10px 12px; min-height: unset; }
+  .header h1 { font-size: 14px; flex: 1; }
+  .header-nav { order: 3; width: 100%; border-top: 1px solid var(--gray-200); padding-top: 8px; overflow-x: auto; display: flex; gap: 4px; }
+  .nav-tab { font-size: 12px; padding: 6px 10px; white-space: nowrap; }
+  .header-right { gap: 4px; }
+  /* Hide less-critical header buttons on mobile */
+  #btn-check-email { display: none; }
+  .header-right .btn-outline:first-of-type { display: none; } /* Refresh */
+
+  /* Filters bar */
+  .filters-bar { flex-wrap: wrap; gap: 6px; }
+  .search-input { width: 100%; }
+  .filter-select, .ms-wrap { min-width: 0; flex: 1 1 calc(50% - 6px); }
+
+  /* Ticket table */
+  .ticket-table th, .ticket-table td { font-size: 12px; padding: 8px 10px; }
+
+  /* Stats */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-num { font-size: 24px; }
+
+  /* Dashboard */
+  .dash-summary-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .dash-charts-row  { grid-template-columns: 1fr !important; }
+  .dash-dev-grid    { grid-template-columns: 1fr !important; }
+
+  /* CAB table */
+  .cab-summary-row  { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Login card */
+  .login-card { padding: 24px 18px 18px; }
+  .login-title { font-size: 17px; }
+
+  /* Modal */
+  .modal { width: calc(100vw - 24px); max-height: 90vh; }
+  .form-row { flex-direction: column; }
 }

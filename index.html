@@ -136,6 +136,7 @@
       <p>Create a new ticket or adjust your filters.</p>
       <button class="btn btn-primary btn-new" onclick="openCreateModal()">+ New Ticket</button>
     </div>
+    <div class="table-scroll-wrap">
     <table class="ticket-table hidden" id="ticket-table">
       <thead>
         <tr>
@@ -146,11 +147,13 @@
           <th>Status</th>
           <th>Assignee</th>
           <th>Due Date</th>
+          <th>Age</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody id="ticket-tbody"></tbody>
     </table>
+    </div>
   </div>
 
 </div><!-- end view-tickets -->
@@ -214,6 +217,7 @@
           <th style="text-align:center">ORA Form</th>
           <th style="text-align:center">CAB Ready</th>
           <th>CAB Status</th>
+          <th>Missing Item</th>
         </tr>
       </thead>
       <tbody id="cab-tbody"></tbody>
