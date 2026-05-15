@@ -135,33 +135,24 @@ body {
 
 /* ---- Table ---- */
 .ticket-table {
-  width: 100%; table-layout: fixed; border-collapse: collapse;
+  width: 100%; table-layout: auto; border-collapse: collapse;
 }
 .ticket-table th,
 .ticket-table td {
-  padding: 11px 10px; vertical-align: middle; text-align: left; overflow: hidden;
+  padding: 11px 10px; vertical-align: middle; text-align: left;
 }
 .ticket-table th {
   font-size: 11px; font-weight: 700; color: var(--gray-500);
   text-transform: uppercase; letter-spacing: 0.06em;
   background: var(--gray-50); border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
 }
 .ticket-table td { border-bottom: 1px solid var(--gray-100); }
 .ticket-table tbody tr:last-child td { border-bottom: none; }
 .ticket-table tbody tr:hover { background: #FAFBFF; }
 
-/* Column widths — fixed total ≈ 855px so title flex fills the rest */
-.ticket-table th:nth-child(1), .ticket-table td:nth-child(1) { width: 120px; white-space: nowrap; }
-.ticket-table th:nth-child(2), .ticket-table td:nth-child(2) { width: auto; }
-.ticket-table th:nth-child(3), .ticket-table td:nth-child(3) { width: 140px; }
-.ticket-table th:nth-child(4), .ticket-table td:nth-child(4) { width: 78px; }
-.ticket-table th:nth-child(5), .ticket-table td:nth-child(5) { width: 82px; }
-.ticket-table th:nth-child(6), .ticket-table td:nth-child(6) { width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ticket-table th:nth-child(7), .ticket-table td:nth-child(7) { width: 58px; text-align: center; }
-.ticket-table th:nth-child(8), .ticket-table td:nth-child(8) { width: 179px; }
-
 .ticket-table .stage-badge {
-  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;
 }
 
 /* ID cell */
