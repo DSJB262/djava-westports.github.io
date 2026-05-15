@@ -64,7 +64,7 @@ body {
   min-width: 42px; padding: 4px 8px; border-radius: 999px;
   font-size: 12px; font-weight: 700;
 }
-.ticket-id-cell, .ticket-id { white-space: nowrap; overflow: visible; }
+.ticket-id-cell, .ticket-id { white-space: nowrap; }
 .jira-badge { margin-left: 6px; font-size: 10px; padding: 2px 6px; border-radius: 6px; }
 .action-buttons { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .action-buttons button { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
@@ -139,7 +139,7 @@ body {
 }
 .ticket-table th,
 .ticket-table td {
-  padding: 14px 12px; vertical-align: middle; text-align: left; overflow: hidden;
+  padding: 11px 10px; vertical-align: middle; text-align: left; overflow: hidden;
 }
 .ticket-table th {
   font-size: 11px; font-weight: 700; color: var(--gray-500);
@@ -150,16 +150,16 @@ body {
 .ticket-table tbody tr:last-child td { border-bottom: none; }
 .ticket-table tbody tr:hover { background: #FAFBFF; }
 
-/* Column widths */
-.ticket-table th:nth-child(1), .ticket-table td:nth-child(1) { width: 130px; min-width: 130px; }
+/* Column widths — fixed total ≈ 855px so title flex fills the rest */
+.ticket-table th:nth-child(1), .ticket-table td:nth-child(1) { width: 120px; white-space: nowrap; }
 .ticket-table th:nth-child(2), .ticket-table td:nth-child(2) { width: auto; }
-.ticket-table th:nth-child(3), .ticket-table td:nth-child(3) { width: 145px; }
-.ticket-table th:nth-child(4), .ticket-table td:nth-child(4) { width: 90px; }
-.ticket-table th:nth-child(5), .ticket-table td:nth-child(5) { width: 90px; }
-.ticket-table th:nth-child(6), .ticket-table td:nth-child(6) { width: 140px; }
-.ticket-table th:nth-child(7), .ticket-table td:nth-child(7) { width: 90px; }
-.ticket-table th:nth-child(8), .ticket-table td:nth-child(8) { width: 70px; text-align: center; }
-.ticket-table th:nth-child(9), .ticket-table td:nth-child(9) { width: 210px; }
+.ticket-table th:nth-child(3), .ticket-table td:nth-child(3) { width: 140px; }
+.ticket-table th:nth-child(4), .ticket-table td:nth-child(4) { width: 78px; }
+.ticket-table th:nth-child(5), .ticket-table td:nth-child(5) { width: 82px; }
+.ticket-table th:nth-child(6), .ticket-table td:nth-child(6) { width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-table th:nth-child(7), .ticket-table td:nth-child(7) { width: 88px; }
+.ticket-table th:nth-child(8), .ticket-table td:nth-child(8) { width: 58px; text-align: center; }
+.ticket-table th:nth-child(9), .ticket-table td:nth-child(9) { width: 179px; }
 
 .ticket-table .stage-badge {
   display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
