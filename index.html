@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Djava-Westports Project Tracker</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -13,29 +13,48 @@
 <!-- ===== Login Overlay ===== -->
 <div id="login-overlay" class="login-overlay">
   <div class="login-card">
-    <div class="login-logo"><img src="favicon.png" alt="Djava-Westports" style="width:64px;height:64px;object-fit:contain"></div>
+    <div class="login-logo"><img src="favicon.svg" alt="Djava-Westports" style="width:80px;height:80px;object-fit:contain"></div>
     <h2 class="login-title">Djava-Westports</h2>
     <p class="login-subtitle">Project Tracker</p>
     <div class="form-group" style="margin-bottom:12px">
       <label>Username</label>
-      <input id="login-username" type="text" placeholder="Enter username" autocomplete="username">
+      <div class="input-wrap">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <input id="login-username" type="text" placeholder="Enter username" autocomplete="username">
+      </div>
     </div>
     <div class="form-group" style="margin-bottom:12px">
       <label>Password</label>
-      <input id="login-password" type="password" placeholder="Enter password"
-             onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="input-wrap">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <input id="login-password" type="password" placeholder="Enter password"
+               onkeydown="if(event.key==='Enter')doLogin()">
+        <button type="button" class="pw-toggle" id="pw-toggle-btn" onclick="togglePassword()" title="Show/hide password">
+          <svg id="pw-eye" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div id="login-error" class="login-error hidden"></div>
-    <button id="login-btn" class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign In</button>
+    <button id="login-btn" class="btn btn-primary" onclick="doLogin()">Sign In</button>
     <details class="login-setup">
-      <summary>API Configuration</summary>
-      <div class="form-group" style="margin-top:10px">
-        <label>Apps Script URL</label>
-        <input id="login-api-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+      <summary>⚙ API Configuration</summary>
+      <div class="setup-inner">
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Apps Script URL</label>
+          <input id="login-api-url" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="saveLoginApiUrl()">Save URL</button>
+        <p id="login-url-status" style="font-size:11px;margin-top:6px;color:#059669"></p>
       </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:6px;width:100%" onclick="saveLoginApiUrl()">Save URL</button>
-      <p id="login-url-status" style="font-size:11px;margin-top:6px;color:#059669"></p>
     </details>
+    <div class="login-footer">
+      Version 1.0.0<br>
+      Powered by dJava Factory
+    </div>
   </div>
 </div>
 
@@ -48,7 +67,7 @@
 </div>
 
 <header class="header">
-  <h1><img src="favicon.png" alt="" style="height:28px;width:28px;object-fit:contain;vertical-align:middle;margin-right:8px">Djava-Westports Project Tracker</h1>
+  <h1><img src="favicon.svg" alt="" style="height:32px;width:32px;object-fit:contain;vertical-align:middle;margin-right:8px">Djava-Westports Project Tracker</h1>
   <div class="header-nav">
     <button class="nav-tab active" id="tab-tickets"   onclick="showView('tickets')">📋 Tickets</button>
     <button class="nav-tab"        id="tab-dashboard" onclick="showView('dashboard')">📊 Dashboard</button>
@@ -56,7 +75,7 @@
   </div>
   <div class="header-right">
     <div class="user-badge" id="user-badge"></div>
-    <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Refresh</button>
+    <button class="btn btn-outline btn-sm" id="btn-refresh" onclick="loadTickets()">↻ Refresh</button>
     <button class="btn btn-outline btn-sm" id="btn-check-email" onclick="checkEmailTickets()" title="Scan Gmail for RE- emails">📧 Check Email</button>
     <button class="btn btn-outline btn-sm" id="btn-settings" onclick="openSettings()">⚙️ Settings</button>
     <button class="btn btn-primary" onclick="openCreateModal()">+ New Ticket</button>
@@ -117,6 +136,7 @@
       <p>Create a new ticket or adjust your filters.</p>
       <button class="btn btn-primary btn-new" onclick="openCreateModal()">+ New Ticket</button>
     </div>
+    <div class="table-scroll-wrap">
     <table class="ticket-table hidden" id="ticket-table">
       <colgroup>
         <col style="width:115px">
@@ -137,11 +157,13 @@
           <th>Status</th>
           <th>Assignee</th>
           <th>Due Date</th>
+          <th>Age</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody id="ticket-tbody"></tbody>
     </table>
+    </div>
   </div>
 
 </div><!-- end view-tickets -->
@@ -205,6 +227,7 @@
           <th style="text-align:center">ORA Form</th>
           <th style="text-align:center">CAB Ready</th>
           <th>CAB Status</th>
+          <th>Missing Item</th>
         </tr>
       </thead>
       <tbody id="cab-tbody"></tbody>

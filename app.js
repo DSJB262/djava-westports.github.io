@@ -74,7 +74,17 @@ function getCurrentUser() {
 
 function isAdmin() {
   const u = getCurrentUser();
-  return u && u.role === 'admin';
+  return u && u.role && u.role.toLowerCase() === 'admin';
+}
+
+function togglePassword() {
+  const inp = document.getElementById('login-password');
+  const eye = document.getElementById('pw-eye');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  eye.innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
 }
 
 async function doLogin() {
@@ -289,6 +299,17 @@ function renderTable(list) {
          <button class="act-btn act-edit"     onclick="editTicket('${x(t.ID)}')">Edit</button>
          <button class="act-btn act-delete"   onclick="deleteTicket('${x(t.ID)}')">Del</button>`;
 
+    const ageDays = (() => {
+      if (!t['Created Date']) return null;
+      const d = new Date(t['Created Date']);
+      if (isNaN(d)) return null;
+      return Math.floor((Date.now() - d) / 86400000);
+    })();
+    const ageBadge = ageDays === null ? '<span style="color:#9CA3AF">—</span>'
+      : ageDays > 14 ? `<span class="age-badge age-old">${ageDays}d</span>`
+      : ageDays > 7  ? `<span class="age-badge age-warn">${ageDays}d</span>`
+      : `<span class="age-badge age-ok">${ageDays}d</span>`;
+
     return `<tr>
       <td class="id-cell">${idCell}</td>
       <td>
@@ -301,6 +322,7 @@ function renderTable(list) {
       <td><span class="badge ${sCls}">${x(t.Status   || '—')}</span></td>
       <td>${t.Assignee ? x(t.Assignee) : '<span style="color:#9CA3AF">—</span>'}</td>
       <td>${dueFmt(t['Due Date'])}</td>
+      <td>${ageBadge}</td>
       <td><div class="act-btns">${actions}</div></td>
     </tr>`;
   }).join('');
@@ -1221,6 +1243,17 @@ function renderCabTable(list, tableEl, emptyEl) {
           : `<span class="cab-ready-badge miss">✗ Not Ready</span>`}
       </td>
       <td>${t['CAB Status'] ? `<span class="badge ${cabCls(t['CAB Status'])}">${x(t['CAB Status'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+      <td>${(() => {
+        const missing = [];
+        if (!t['Doc MOP'])         missing.push('MOP');
+        if (!t['Doc Test Result']) missing.push('Test Signoff');
+        if (!t['Doc ORA'])         missing.push('ORA Form');
+        if (!t['CAB Date'])        missing.push('CAB Date');
+        if (!t['Change Ticket No']) missing.push('Change Ticket No');
+        return missing.length
+          ? missing.map(m => `<span class="miss-item">${m}</span>`).join(' ')
+          : '<span class="miss-item-ok">✓ Complete</span>';
+      })()}</td>
     </tr>`;
   }).join('');
 }
@@ -1238,23 +1271,41 @@ function renderDashboard() {
 }
 
 function renderDashSummary(active) {
-  const total   = tickets.length;
-  const open    = tickets.filter(t => t.Status === 'Open').length;
-  const inprog  = tickets.filter(t => t.Status === 'In Progress').length;
-  const pending = tickets.filter(t => t.Status === 'Pending').length;
-  const overdue = tickets.filter(t => {
-    if (!t['Due Date']) return false;
-    return new Date(t['Due Date'] + 'T00:00:00') < new Date();
+  const now      = new Date();
+  const in7days  = new Date(now.getTime() + 7 * 86400000);
+  const total    = tickets.length;
+  const open     = tickets.filter(t => t.Status === 'Open').length;
+  const inprog   = tickets.filter(t => t.Status === 'In Progress').length;
+  const pending  = tickets.filter(t => t.Status === 'Pending').length;
+  const overdue  = tickets.filter(t => {
+    if (!t['Due Date'] || t.Status === 'Closed' || t.Status === 'Resolved') return false;
+    return new Date(t['Due Date'] + 'T00:00:00') < now;
   }).length;
-  const noStage = active.filter(t => !t.Stage && t.Source === 'Manual').length;
+  const dueWeek  = active.filter(t => {
+    if (!t['Due Date']) return false;
+    const d = new Date(t['Due Date'] + 'T00:00:00');
+    return !isNaN(d) && d >= now && d <= in7days;
+  }).length;
+  const aging14  = active.filter(t => {
+    if (!t['Created Date']) return false;
+    const d = new Date(t['Created Date']);
+    return !isNaN(d) && (now - d) / 86400000 > 14;
+  }).length;
+  const cabReady   = active.filter(t => t['CAB Ready']).length;
+  const pendingCAB = active.filter(t => t.Stage === 'Pending CAB Approval').length;
+  const missDocs   = active.filter(t => t['Change Ticket No'] && (!t['Doc MOP'] || !t['Doc Test Result'] || !t['Doc ORA'])).length;
 
   document.getElementById('dash-summary').innerHTML = [
-    { n: total,   l: 'Total Tickets',    c: '' },
-    { n: open,    l: 'Open',             c: 'c-open' },
-    { n: inprog,  l: 'In Progress',      c: 'c-ip' },
-    { n: pending, l: 'Pending',          c: 'c-pend' },
-    { n: overdue, l: 'Overdue',          c: 'c-crit' },
-    { n: noStage, l: 'No Stage Set',     c: 'c-warn' }
+    { n: total,      l: 'Total Tickets',       c: '' },
+    { n: open,       l: 'Open',                c: 'c-open' },
+    { n: inprog,     l: 'In Progress',         c: 'c-ip' },
+    { n: pending,    l: 'Pending',             c: 'c-pend' },
+    { n: overdue,    l: 'Overdue',             c: 'c-crit' },
+    { n: dueWeek,    l: 'Due This Week',       c: overdue > 0 ? 'c-warn' : '' },
+    { n: aging14,    l: 'Aging > 14 Days',     c: aging14  > 0 ? 'c-warn' : '' },
+    { n: cabReady,   l: 'CAB Ready',           c: 'c-res'  },
+    { n: pendingCAB, l: 'Pending CAB',         c: pendingCAB > 0 ? 'c-pend' : '' },
+    { n: missDocs,   l: 'Missing Docs (CAB)',  c: missDocs > 0 ? 'c-crit' : '' }
   ].map(s => `
     <div class="dash-sum-card">
       <div class="dash-sum-num ${s.c}">${s.n}</div>

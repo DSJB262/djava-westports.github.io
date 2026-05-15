@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 90" width="460" height="90">
+  <rect width="460" height="90" fill="white"/>
+  <g transform="translate(10, 15)">
+    <circle cx="40" cy="40" r="38" fill="#1e9fd4"/>
+    <text x="40" y="54" font-family="Arial Black, 'Arial Bold', sans-serif" font-size="38" font-weight="900" fill="white" text-anchor="middle">W</text>
+    <circle cx="64" cy="65" r="13" fill="white" stroke="#1e9fd4" stroke-width="2"/>
+    <polyline points="58,65 62,70 70,58" stroke="#1e9fd4" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <text x="100" y="52" font-family="Arial Black, 'Arial Bold', sans-serif" font-size="36" font-weight="900" fill="#1e9fd4">dJava</text>
+  <text x="228" y="52" font-family="Arial, sans-serif" font-size="36" font-weight="400" fill="#1a1a1a">Westports</text>
+  <line x1="100" y1="60" x2="450" y2="60" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="100" y="78" font-family="Arial, sans-serif" font-size="13" font-weight="400" fill="#888888" letter-spacing="2">Project </text>
+  <text x="163" y="78" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#1e9fd4" letter-spacing="2">Tracker</text>
+</svg>
