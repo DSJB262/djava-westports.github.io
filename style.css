@@ -113,15 +113,19 @@ body {
 .empty-state p  { margin-bottom: 20px; }
 
 /* ---- Table ---- */
-.ticket-table { width: 100%; border-collapse: collapse; }
+.ticket-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .ticket-table th {
-  padding: 11px 14px; text-align: left; white-space: nowrap;
+  padding: 10px 10px; text-align: left;
   font-size: 11px; font-weight: 700; color: var(--gray-500);
   text-transform: uppercase; letter-spacing: 0.06em;
   background: var(--gray-50); border-bottom: 1px solid var(--gray-200);
 }
 .ticket-table td {
-  padding: 12px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle;
+  padding: 10px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle;
+  overflow: hidden;
+}
+.ticket-table .stage-badge {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 .ticket-table tbody tr:last-child td { border-bottom: none; }
 .ticket-table tbody tr:hover { background: #FAFBFF; }

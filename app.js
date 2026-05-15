@@ -278,7 +278,7 @@ function renderTable(list) {
 
     const stage = t.Stage || '';
     const stageHtml = stage
-      ? `<span class="stage-badge">${x(stage)}</span>`
+      ? `<span class="stage-badge" title="${x(stage)}">${x(stage)}</span>`
       : `<span style="color:#9CA3AF;font-size:12px">Not set</span>`;
 
     const actions = isJira
