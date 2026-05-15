@@ -157,9 +157,8 @@ body {
 .ticket-table th:nth-child(4), .ticket-table td:nth-child(4) { width: 78px; }
 .ticket-table th:nth-child(5), .ticket-table td:nth-child(5) { width: 82px; }
 .ticket-table th:nth-child(6), .ticket-table td:nth-child(6) { width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ticket-table th:nth-child(7), .ticket-table td:nth-child(7) { width: 88px; }
-.ticket-table th:nth-child(8), .ticket-table td:nth-child(8) { width: 58px; text-align: center; }
-.ticket-table th:nth-child(9), .ticket-table td:nth-child(9) { width: 179px; }
+.ticket-table th:nth-child(7), .ticket-table td:nth-child(7) { width: 58px; text-align: center; }
+.ticket-table th:nth-child(8), .ticket-table td:nth-child(8) { width: 179px; }
 
 .ticket-table .stage-badge {
   display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;

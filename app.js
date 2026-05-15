@@ -321,7 +321,6 @@ function renderTable(list) {
       <td><span class="badge ${pCls}">${x(t.Priority || '—')}</span></td>
       <td><span class="badge ${sCls}">${x(t.Status   || '—')}</span></td>
       <td>${t.Assignee ? x(t.Assignee) : '<span style="color:#9CA3AF">—</span>'}</td>
-      <td>${dueFmt(t['Due Date'])}</td>
       <td>${ageBadge}</td>
       <td><div class="act-btns">${actions}</div></td>
     </tr>`;
