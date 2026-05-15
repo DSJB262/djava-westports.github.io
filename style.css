@@ -59,7 +59,15 @@ body {
 .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* ---- Age badge ---- */
-.age-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.age-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 42px; padding: 4px 8px; border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+}
+.ticket-id-cell, .ticket-id { white-space: nowrap; overflow: visible; }
+.jira-badge { margin-left: 6px; font-size: 10px; padding: 2px 6px; border-radius: 6px; }
+.action-buttons { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.action-buttons button { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 .age-ok   { background: #D1FAE5; color: #065F46; }
 .age-warn { background: #FEF3C7; color: #92400E; }
 .age-old  { background: #FEE2E2; color: #991B1B; }
@@ -126,22 +134,36 @@ body {
 .empty-state p  { margin-bottom: 20px; }
 
 /* ---- Table ---- */
-.ticket-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.ticket-table {
+  width: 100%; table-layout: fixed; border-collapse: collapse;
+}
+.ticket-table th,
+.ticket-table td {
+  padding: 14px 12px; vertical-align: middle; text-align: left; overflow: hidden;
+}
 .ticket-table th {
-  padding: 10px 10px; text-align: left;
   font-size: 11px; font-weight: 700; color: var(--gray-500);
   text-transform: uppercase; letter-spacing: 0.06em;
   background: var(--gray-50); border-bottom: 1px solid var(--gray-200);
 }
-.ticket-table td {
-  padding: 10px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle;
-  overflow: hidden;
-}
+.ticket-table td { border-bottom: 1px solid var(--gray-100); }
+.ticket-table tbody tr:last-child td { border-bottom: none; }
+.ticket-table tbody tr:hover { background: #FAFBFF; }
+
+/* Column widths */
+.ticket-table th:nth-child(1), .ticket-table td:nth-child(1) { width: 130px; min-width: 130px; }
+.ticket-table th:nth-child(2), .ticket-table td:nth-child(2) { width: auto; }
+.ticket-table th:nth-child(3), .ticket-table td:nth-child(3) { width: 145px; }
+.ticket-table th:nth-child(4), .ticket-table td:nth-child(4) { width: 90px; }
+.ticket-table th:nth-child(5), .ticket-table td:nth-child(5) { width: 90px; }
+.ticket-table th:nth-child(6), .ticket-table td:nth-child(6) { width: 140px; }
+.ticket-table th:nth-child(7), .ticket-table td:nth-child(7) { width: 90px; }
+.ticket-table th:nth-child(8), .ticket-table td:nth-child(8) { width: 70px; text-align: center; }
+.ticket-table th:nth-child(9), .ticket-table td:nth-child(9) { width: 210px; }
+
 .ticket-table .stage-badge {
   display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
-.ticket-table tbody tr:last-child td { border-bottom: none; }
-.ticket-table tbody tr:hover { background: #FAFBFF; }
 
 /* ID cell */
 .id-cell    { white-space: nowrap; }
@@ -188,7 +210,7 @@ body {
 .due.ok       { color: var(--gray-500); }
 
 /* ---- Action Buttons ---- */
-.act-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+.act-btns { display: flex; gap: 5px; flex-wrap: nowrap; align-items: center; white-space: nowrap; }
 .act-btn  {
   padding: 4px 9px; border: none; border-radius: 6px;
   cursor: pointer; font-size: 11px; font-weight: 600;
