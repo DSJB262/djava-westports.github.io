@@ -74,7 +74,7 @@ function getCurrentUser() {
 
 function isAdmin() {
   const u = getCurrentUser();
-  return u && u.role === 'admin';
+  return u && u.role && u.role.toLowerCase() === 'admin';
 }
 
 function togglePassword() {

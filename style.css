@@ -734,7 +734,7 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
   .header-right { gap: 4px; }
   /* Hide less-critical header buttons on mobile */
   #btn-check-email { display: none; }
-  .header-right .btn-outline:first-of-type { display: none; } /* Refresh */
+  #btn-refresh     { display: none; }
 
   /* Filters bar */
   .filters-bar { flex-wrap: wrap; gap: 6px; }
