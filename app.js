@@ -18,7 +18,8 @@ const STAGES = [
   'Pending CAB Approval',
   'Implementation In Progress',
   'Resolved',
-  'Rolled Back'
+  'Rolled Back',
+  'Hold'
 ];
 
 const STAGE_PCT = {
@@ -37,7 +38,8 @@ const STAGE_PCT = {
   'Pending CAB Approval': 85,
   'Implementation In Progress': 92,
   'Resolved': 100,
-  'Rolled Back': 100
+  'Rolled Back': 100,
+  'Hold': 0
 };
 
 const MS_CONFIGS = {
@@ -1442,7 +1444,7 @@ function renderCharts(active) {
   const stageColors = [
     '#E0E7FF','#C7D2FE','#A5B4FC','#818CF8','#6366F1',
     '#4F46E5','#4338CA','#3730A3','#312E81','#1E1B4B',
-    '#059669','#10B981','#34D399','#6EE7B7','#065F46','#F59E0B','#9CA3AF'
+    '#059669','#10B981','#34D399','#6EE7B7','#065F46','#F59E0B','#64748B','#9CA3AF'
   ];
   chartStage = new Chart(document.getElementById('chart-stage'), {
     type: 'bar',
