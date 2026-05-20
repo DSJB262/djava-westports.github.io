@@ -62,6 +62,30 @@ const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxSGGK0OvAmcxa-
 let API_URL      = localStorage.getItem('tracker_api_url') || DEFAULT_API_URL;
 let hideResolved = localStorage.getItem('tracker_hide_resolved') !== 'false';
 let tickets = [], assignees = [], currentDetailId = null, filteredTickets = [];
+let sortCol = null, sortDir = 'asc';
+
+const DEFAULT_SLA = {
+  'Troubleshooting / Investigation': 3,
+  'Requires Fix / Development': 1,
+  'Pending Development': 3,
+  'Development In Progress': 7,
+  'Pending Testing': 2,
+  'Testing In Progress': 3,
+  'Pending CAB Approval': 3,
+  'Implementation In Progress': 1
+};
+let slaDays = JSON.parse(localStorage.getItem('tracker_sla') || 'null') || { ...DEFAULT_SLA };
+
+const DEV_STAGES = new Set([
+  'Requires Fix / Development', 'Pending Development', 'Development In Progress',
+  'Pending Testing', 'Testing In Progress', 'Plan for Release',
+  'Pending CAB Approval', 'Implementation In Progress', 'Rolled Back'
+]);
+const SUPPORT_STAGES = new Set([
+  'Requested / Reported', 'Troubleshooting / Investigation',
+  'Pending URS', 'Pending Mandays Estimation',
+  'Pending Revised Mandays', 'Pending Mandays / CR Approval'
+]);
 
 // ============================================================
 // Auth
@@ -264,6 +288,26 @@ async function loadTickets() {
 
 function renderTable(list) {
   filteredTickets = list;
+
+  // Sort
+  if (sortCol) {
+    list = [...list].sort((a, b) => {
+      let va, vb;
+      if (sortCol === 'age') {
+        va = a['Created Date'] ? new Date(a['Created Date']).getTime() : Infinity;
+        vb = b['Created Date'] ? new Date(b['Created Date']).getTime() : Infinity;
+      } else {
+        va = a['Updated Date'] ? new Date(a['Updated Date']).getTime() : 0;
+        vb = b['Updated Date'] ? new Date(b['Updated Date']).getTime() : 0;
+      }
+      return sortDir === 'asc' ? va - vb : vb - va;
+    });
+  }
+
+  // Row count
+  const countEl = document.getElementById('row-count');
+  if (countEl) countEl.textContent = `Showing ${list.length} of ${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`;
+
   document.getElementById('loading').classList.add('hidden');
   const table = document.getElementById('ticket-table');
   const empty = document.getElementById('empty-state');
@@ -308,26 +352,64 @@ function renderTable(list) {
       if (isNaN(d)) return null;
       return Math.floor((Date.now() - d) / 86400000);
     })();
-    const ageBadge = ageDays === null ? '<span style="color:#9CA3AF">—</span>'
-      : ageDays > 14 ? `<span class="age-badge age-old">${ageDays}d</span>`
-      : ageDays > 7  ? `<span class="age-badge age-warn">${ageDays}d</span>`
-      : `<span class="age-badge age-ok">${ageDays}d</span>`;
+
+    const slaTarget  = slaDays[t.Stage];
+    const slaBreached = (() => {
+      if (!slaTarget || !t['Updated Date']) return false;
+      const upd = new Date(t['Updated Date']);
+      return !isNaN(upd) && Math.floor((Date.now() - upd) / 86400000) > slaTarget;
+    })();
+
+    const ageClass = ageDays === null ? '' : ageDays > 14 ? 'age-old' : ageDays > 7 ? 'age-warn' : 'age-ok';
+    const ageBadge = ageDays === null
+      ? '<span style="color:#9CA3AF">—</span>'
+      : `<span class="age-badge ${ageClass}${slaBreached ? ' sla-breach' : ''}"
+              title="${slaBreached ? `⚠ No update for >${slaTarget}d (SLA for this stage)` : ageDays + 'd old'}">
+           ${ageDays}d${slaBreached ? ' ⚠' : ''}
+         </span>`;
+
+    const updCell = (() => {
+      if (!t['Updated Date']) return '<span style="color:#9CA3AF">—</span>';
+      const d = new Date(t['Updated Date']);
+      if (isNaN(d)) return '<span style="color:#9CA3AF">—</span>';
+      const days = Math.floor((Date.now() - d) / 86400000);
+      if (days === 0) return `<span style="color:#059669;font-size:12px">Today</span>`;
+      if (days === 1) return `<span style="font-size:12px">Yesterday</span>`;
+      return `<span style="font-size:12px;color:#6B7280">${days}d ago</span>`;
+    })();
 
     return `<tr>
       <td class="id-cell">${idCell}</td>
       <td>
         <div class="t-title" onclick="viewTicket('${x(t.ID)}')">${x(t.Title)}</div>
-        ${t.Requester    ? `<div class="t-sub">by ${x(t.Requester)}</div>` : ''}
-        ${t['Jira Ref']  ? `<div class="t-sub">🔗 ${x(t['Jira Ref'])}</div>` : ''}
+        ${t.Requester   ? `<div class="t-sub">by ${x(t.Requester)}</div>` : ''}
+        ${t['Jira Ref'] ? `<div class="t-sub">🔗 ${x(t['Jira Ref'])}</div>` : ''}
       </td>
       <td>${stageHtml}</td>
       <td><span class="badge ${pCls}">${x(t.Priority || '—')}</span></td>
       <td><span class="badge ${sCls}">${x(t.Status   || '—')}</span></td>
       <td>${t.Assignee ? x(t.Assignee) : '<span style="color:#9CA3AF">—</span>'}</td>
+      <td>${updCell}</td>
       <td>${ageBadge}</td>
       <td><div class="act-btns">${actions}</div></td>
     </tr>`;
   }).join('');
+}
+
+function setSortCol(col) {
+  if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortCol = col; sortDir = col === 'updated' ? 'desc' : 'asc'; }
+  updateSortHeaders();
+  applyFilters();
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    const col = th.dataset.sort;
+    th.classList.toggle('sort-active', col === sortCol);
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = col !== sortCol ? '⇅' : sortDir === 'asc' ? '↑' : '↓';
+  });
 }
 
 function renderStats(list) {
@@ -1017,9 +1099,13 @@ async function loadAssignees() {
 
 function refreshAssigneeDropdown() {
   const sel = document.getElementById('filter-assignee'), cur = sel.value;
+  const activeNames = new Set(
+    tickets.filter(t => t.Status !== 'Closed' && t.Status !== 'Resolved' && t.Assignee).map(t => t.Assignee)
+  );
+  const list = assignees.filter(a => activeNames.has(a.name));
   sel.innerHTML = '<option value="">All Assignees</option>' +
-    assignees.map(a => `<option value="${x(a.name)}">${x(a.name)}</option>`).join('');
-  sel.value = cur;
+    list.map(a => `<option value="${x(a.name)}">${x(a.name)}</option>`).join('');
+  sel.value = activeNames.has(cur) ? cur : '';
 }
 
 function fillAssigneeSelect(selId, selected) {
@@ -1110,7 +1196,55 @@ function openSettings() {
   document.getElementById('conn-status').className   = 'conn-status';
   renderAssigneesList();
   loadUsers();
+  renderSLAForm();
   openModal('settings-modal');
+}
+
+function renderSLAForm() {
+  const el = document.getElementById('sla-form');
+  if (!el) return;
+  el.innerHTML = Object.entries(DEFAULT_SLA).map(([stage, def]) => `
+    <div class="sla-row">
+      <label class="sla-label">${x(stage)}</label>
+      <input type="number" class="sla-input" id="sla-${slug(stage)}" value="${slaDays[stage] || def}" min="1" max="90">
+      <span class="sla-unit">days</span>
+    </div>`).join('');
+}
+
+function saveSLA() {
+  Object.keys(DEFAULT_SLA).forEach(stage => {
+    const el = document.getElementById('sla-' + slug(stage));
+    if (el) slaDays[stage] = parseInt(el.value) || DEFAULT_SLA[stage];
+  });
+  localStorage.setItem('tracker_sla', JSON.stringify(slaDays));
+  const st = document.getElementById('sla-status');
+  if (st) { st.textContent = '✓ SLA targets saved'; setTimeout(() => { st.textContent = ''; }, 3000); }
+  applyFilters();
+}
+
+function resetSLA() {
+  slaDays = { ...DEFAULT_SLA };
+  localStorage.removeItem('tracker_sla');
+  renderSLAForm();
+  const st = document.getElementById('sla-status');
+  if (st) { st.textContent = '✓ Reset to defaults'; setTimeout(() => { st.textContent = ''; }, 3000); }
+  applyFilters();
+}
+
+async function setupReminderTrigger() {
+  const statusEl = document.getElementById('reminder-status');
+  const hour = parseInt(document.getElementById('reminder-hour').value);
+  statusEl.style.color = '#6B7280';
+  statusEl.textContent = 'Setting up…';
+  try {
+    const res = await apiPost({ action: 'setupDailyReminder', hour });
+    if (res.error) throw new Error(res.error);
+    statusEl.textContent = '✓ ' + (res.message || 'Daily reminder enabled at ' + hour + ':00');
+    statusEl.style.color = '#059669';
+  } catch(err) {
+    statusEl.textContent = '✗ ' + err.message;
+    statusEl.style.color = '#EF4444';
+  }
 }
 
 function saveApiUrl() {
@@ -1284,6 +1418,7 @@ function renderDashboard() {
   const active = tickets.filter(t => t.Status !== 'Closed' && t.Status !== 'Resolved');
   renderDashSummary(active);
   renderDevCards(active);
+  renderSupportCards(active);
   renderProgressTable(active);
   renderCharts(active);
 }
@@ -1335,14 +1470,16 @@ function renderDevCards(active) {
   const grid = document.getElementById('dash-dev-cards');
   const cards = DEVS.map(dev => {
     const devTickets = active.filter(t =>
-      t['PIC Dev'] === dev || t['PIC Test'] === dev || t.Assignee === dev ||
-      (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
+      DEV_STAGES.has(t.Stage) && (
+        t['PIC Dev'] === dev || t['PIC Test'] === dev ||
+        (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
+      )
     );
     if (!devTickets.length) return `
       <div class="dev-card dev-card-empty">
         <div class="dev-avatar">${dev[0]}</div>
         <div class="dev-name">${dev}</div>
-        <div class="dev-count">No active tickets</div>
+        <div class="dev-count">No dev/test tickets</div>
       </div>`;
 
     const rows = devTickets.slice(0, 5).map(t => {
@@ -1378,7 +1515,55 @@ function renderDevCards(active) {
           <div class="dev-avatar">${dev[0]}</div>
           <div>
             <div class="dev-name">${dev}</div>
-            <div class="dev-count">${devTickets.length} active ticket${devTickets.length !== 1 ? 's' : ''}</div>
+            <div class="dev-count">${devTickets.length} dev/test ticket${devTickets.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div class="dev-tickets">${rows}${more}</div>
+      </div>`;
+  }).join('');
+
+  grid.innerHTML = cards;
+}
+
+function renderSupportCards(active) {
+  const grid = document.getElementById('dash-support-cards');
+  if (!grid) return;
+  const supportTickets = active.filter(t => SUPPORT_STAGES.has(t.Stage));
+  const cards = DEVS.map(dev => {
+    const myTickets = supportTickets.filter(t => t.Assignee === dev);
+    if (!myTickets.length) return `
+      <div class="dev-card dev-card-empty">
+        <div class="dev-avatar">${dev[0]}</div>
+        <div class="dev-name">${dev}</div>
+        <div class="dev-count">No investigation tickets</div>
+      </div>`;
+
+    const rows = myTickets.slice(0, 5).map(t => {
+      const pCls = 'p-' + slug(t.Priority || '');
+      const ageDays = t['Created Date'] ? Math.floor((Date.now() - new Date(t['Created Date'])) / 86400000) : null;
+      return `
+        <div class="dev-ticket" onclick="viewTicket('${x(t.ID)}');showView('tickets')">
+          <div class="dev-ticket-top">
+            <span class="dev-ticket-id">${x(t.ID)}</span>
+            <span class="badge ${pCls}" style="font-size:10px">${x(t.Priority||'')}</span>
+            ${ageDays !== null ? `<span class="age-badge ${ageDays>14?'age-old':ageDays>7?'age-warn':'age-ok'}" style="font-size:10px;padding:2px 6px">${ageDays}d</span>` : ''}
+          </div>
+          <div class="dev-ticket-title">${x(t.Title)}</div>
+          <div class="dev-ticket-stage">${x(t.Stage||'Not set')}</div>
+        </div>`;
+    }).join('');
+
+    const more = myTickets.length > 5
+      ? `<div style="font-size:11px;color:#9CA3AF;padding:6px 0;text-align:center">+${myTickets.length - 5} more</div>`
+      : '';
+
+    return `
+      <div class="dev-card">
+        <div class="dev-card-header">
+          <div class="dev-avatar">${dev[0]}</div>
+          <div>
+            <div class="dev-name">${dev}</div>
+            <div class="dev-count">${myTickets.length} investigation ticket${myTickets.length !== 1 ? 's' : ''}</div>
           </div>
         </div>
         <div class="dev-tickets">${rows}${more}</div>
@@ -1439,15 +1624,17 @@ function renderCharts(active) {
 
   const devCounts = DEVS.map(dev =>
     active.filter(t =>
-      t['PIC Dev'] === dev || t['PIC Test'] === dev || t.Assignee === dev ||
-      (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
+      DEV_STAGES.has(t.Stage) && (
+        t['PIC Dev'] === dev || t['PIC Test'] === dev ||
+        (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
+      )
     ).length
   );
   chartDev = new Chart(document.getElementById('chart-dev'), {
     type: 'bar',
     data: {
       labels: DEVS,
-      datasets: [{ label: 'Active Tickets', data: devCounts, backgroundColor: '#4F46E5', borderRadius: 6 }]
+      datasets: [{ label: 'Dev/Test Tickets', data: devCounts, backgroundColor: '#4F46E5', borderRadius: 6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,

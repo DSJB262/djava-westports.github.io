@@ -137,6 +137,7 @@
       <p>Create a new ticket or adjust your filters.</p>
       <button class="btn btn-primary btn-new" onclick="openCreateModal()">+ New Ticket</button>
     </div>
+    <div id="row-count" class="row-count-bar"></div>
     <div class="table-scroll-wrap">
     <table class="ticket-table hidden" id="ticket-table">
       <thead>
@@ -147,7 +148,8 @@
           <th>Priority</th>
           <th>Status</th>
           <th>Assignee</th>
-          <th>Age</th>
+          <th class="th-sort" data-sort="updated" onclick="setSortCol('updated')">Updated <span class="sort-arrow">⇅</span></th>
+          <th class="th-sort" data-sort="age" onclick="setSortCol('age')">Age <span class="sort-arrow">⇅</span></th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -177,8 +179,12 @@
     </div>
   </div>
 
-  <div class="dash-section-heading">👥 Developer Workload</div>
+  <div class="dash-section-heading">🔨 Development & Testing Workload</div>
   <div id="dash-dev-cards" class="dash-dev-grid"></div>
+
+  <div class="dash-section-heading">🔍 Support & Investigation Workload</div>
+  <div style="font-size:12px;color:#6B7280;margin:-8px 0 10px">Tickets in investigation/pending stages by Assignee. &nbsp;<span style="color:#D97706">⚠ ManageEngine has no API — tickets come from email only. Ensure email auto-check is enabled in Settings.</span></div>
+  <div id="dash-support-cards" class="dash-dev-grid"></div>
 
   <div class="dash-section-heading">📋 All Active Tickets — Stage Progress</div>
   <div class="dash-card" style="padding:0;overflow:hidden">
@@ -644,6 +650,38 @@
           <div style="padding-bottom:1px"><button class="btn btn-primary btn-sm" onclick="addUser()">Add</button></div>
         </div>
         <div id="users-list" class="assignees-list"></div>
+      </div>
+
+      <hr>
+
+      <hr>
+
+      <div class="settings-section">
+        <h3>⏰ SLA Targets (days per stage)</h3>
+        <p class="text-muted">Max days a ticket should stay in each stage. Age badge turns red with ⚠ when exceeded. Requires <em>Updated Date</em> field from your GAS backend.</p>
+        <div id="sla-form" class="sla-grid"></div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="saveSLA()">Save SLA</button>
+          <button class="btn btn-outline btn-sm" onclick="resetSLA()">Reset Defaults</button>
+        </div>
+        <div id="sla-status" style="margin-top:8px;font-size:12px;color:#059669"></div>
+      </div>
+
+      <hr>
+
+      <div class="settings-section">
+        <h3>🔔 Daily Developer Reminder</h3>
+        <p class="text-muted">Sends each developer an email at the chosen hour listing their open tickets. Requires <code>sendDailyReminders</code> action in your GAS backend (see GAS code below).</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+          <select id="reminder-hour" class="filter-select" style="font-size:12px;padding:6px 10px">
+            <option value="7">7:00 AM</option>
+            <option value="8" selected>8:00 AM</option>
+            <option value="9">9:00 AM</option>
+            <option value="10">10:00 AM</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="setupReminderTrigger()">⏱ Enable Daily Reminder</button>
+        </div>
+        <div id="reminder-status" style="margin-top:8px;font-size:12px"></div>
       </div>
 
       <hr>
