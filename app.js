@@ -381,11 +381,13 @@ function exportCSV() {
   const esc  = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
   const rows = [cols.map(esc).join(',')];
   filteredTickets.forEach(t => rows.push(cols.map(c => esc(t[c])).join(',')));
-  const blob = new Blob([rows.join('\r\n')], { type: 'text/csv' });
+  const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'tickets_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
 }
 
