@@ -18,7 +18,8 @@ const STAGES = [
   'Pending CAB Approval',
   'Implementation In Progress',
   'Resolved',
-  'Rolled Back'
+  'Rolled Back',
+  'Hold'
 ];
 
 const STAGE_PCT = {
@@ -37,7 +38,8 @@ const STAGE_PCT = {
   'Pending CAB Approval': 85,
   'Implementation In Progress': 92,
   'Resolved': 100,
-  'Rolled Back': 100
+  'Rolled Back': 100,
+  'Hold': 0
 };
 
 const MS_CONFIGS = {
@@ -59,7 +61,7 @@ const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxSGGK0OvAmcxa-
 
 let API_URL      = localStorage.getItem('tracker_api_url') || DEFAULT_API_URL;
 let hideResolved = localStorage.getItem('tracker_hide_resolved') !== 'false';
-let tickets = [], assignees = [], currentDetailId = null, filteredTickets = [];
+let tickets = [], assignees = [], currentDetailId = null;
 
 // ============================================================
 // Auth
@@ -261,7 +263,6 @@ async function loadTickets() {
 // ============================================================
 
 function renderTable(list) {
-  filteredTickets = list;
   document.getElementById('loading').classList.add('hidden');
   const table = document.getElementById('ticket-table');
   const empty = document.getElementById('empty-state');
@@ -289,7 +290,7 @@ function renderTable(list) {
 
     const stage = t.Stage || '';
     const stageHtml = stage
-      ? `<span class="stage-badge">${x(stage)}</span>`
+      ? `<span class="stage-badge" title="${x(stage)}">${x(stage)}</span>`
       : `<span style="color:#9CA3AF;font-size:12px">Not set</span>`;
 
     const actions = isJira
@@ -322,7 +323,6 @@ function renderTable(list) {
       <td><span class="badge ${pCls}">${x(t.Priority || '—')}</span></td>
       <td><span class="badge ${sCls}">${x(t.Status   || '—')}</span></td>
       <td>${t.Assignee ? x(t.Assignee) : '<span style="color:#9CA3AF">—</span>'}</td>
-      <td>${dueFmt(t['Due Date'])}</td>
       <td>${ageBadge}</td>
       <td><div class="act-btns">${actions}</div></td>
     </tr>`;
@@ -372,20 +372,6 @@ function clearFilters() {
   ['stage','type','status','priority'].forEach(k => clearMs(k));
   document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
   applyFilters();
-}
-
-function exportCSV() {
-  if (!filteredTickets.length) { alert('No tickets to export.'); return; }
-  const cols = ['ID','Source','Title','Type','Priority','Status','Stage','Requester','Assignee','Due Date','Jira Ref','Change Ticket No','Project','Notes','Description'];
-  const esc  = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const rows = [cols.map(esc).join(',')];
-  filteredTickets.forEach(t => rows.push(cols.map(c => esc(t[c])).join(',')));
-  const blob = new Blob([rows.join('\r\n')], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'tickets_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
 }
 
 function toggleHideResolved() {
@@ -1458,7 +1444,7 @@ function renderCharts(active) {
   const stageColors = [
     '#E0E7FF','#C7D2FE','#A5B4FC','#818CF8','#6366F1',
     '#4F46E5','#4338CA','#3730A3','#312E81','#1E1B4B',
-    '#059669','#10B981','#34D399','#6EE7B7','#065F46','#F59E0B','#9CA3AF'
+    '#059669','#10B981','#34D399','#6EE7B7','#065F46','#F59E0B','#64748B','#9CA3AF'
   ];
   chartStage = new Chart(document.getElementById('chart-stage'), {
     type: 'bar',

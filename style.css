@@ -57,10 +57,17 @@ body {
 
 /* ---- Ticket table scroll wrap ---- */
 .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.ticket-table th, .ticket-table td { white-space: nowrap; }
 
 /* ---- Age badge ---- */
-.age-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.age-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 42px; padding: 4px 8px; border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+}
+.ticket-id-cell, .ticket-id { white-space: nowrap; }
+.jira-badge { margin-left: 6px; font-size: 10px; padding: 2px 6px; border-radius: 6px; }
+.action-buttons { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.action-buttons button { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
 .age-ok   { background: #D1FAE5; color: #065F46; }
 .age-warn { background: #FEF3C7; color: #92400E; }
 .age-old  { background: #FEE2E2; color: #991B1B; }
@@ -127,18 +134,26 @@ body {
 .empty-state p  { margin-bottom: 20px; }
 
 /* ---- Table ---- */
-.ticket-table { width: 100%; border-collapse: collapse; }
+.ticket-table {
+  width: 100%; table-layout: auto; border-collapse: collapse;
+}
+.ticket-table th,
+.ticket-table td {
+  padding: 11px 10px; vertical-align: middle; text-align: left;
+}
 .ticket-table th {
-  padding: 11px 14px; text-align: left; white-space: nowrap;
   font-size: 11px; font-weight: 700; color: var(--gray-500);
   text-transform: uppercase; letter-spacing: 0.06em;
   background: var(--gray-50); border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
 }
-.ticket-table td {
-  padding: 12px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle;
-}
+.ticket-table td { border-bottom: 1px solid var(--gray-100); }
 .ticket-table tbody tr:last-child td { border-bottom: none; }
 .ticket-table tbody tr:hover { background: #FAFBFF; }
+
+.ticket-table .stage-badge {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;
+}
 
 /* ID cell */
 .id-cell    { white-space: nowrap; }
@@ -185,7 +200,7 @@ body {
 .due.ok       { color: var(--gray-500); }
 
 /* ---- Action Buttons ---- */
-.act-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+.act-btns { display: flex; gap: 5px; flex-wrap: nowrap; align-items: center; white-space: nowrap; }
 .act-btn  {
   padding: 4px 9px; border: none; border-radius: 6px;
   cursor: pointer; font-size: 11px; font-weight: 600;
