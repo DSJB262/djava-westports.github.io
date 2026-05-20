@@ -61,7 +61,7 @@ const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxSGGK0OvAmcxa-
 
 let API_URL      = localStorage.getItem('tracker_api_url') || DEFAULT_API_URL;
 let hideResolved = localStorage.getItem('tracker_hide_resolved') !== 'false';
-let tickets = [], assignees = [], currentDetailId = null;
+let tickets = [], assignees = [], currentDetailId = null, filteredTickets = [];
 
 // ============================================================
 // Auth
@@ -263,6 +263,7 @@ async function loadTickets() {
 // ============================================================
 
 function renderTable(list) {
+  filteredTickets = list;
   document.getElementById('loading').classList.add('hidden');
   const table = document.getElementById('ticket-table');
   const empty = document.getElementById('empty-state');
@@ -372,6 +373,20 @@ function clearFilters() {
   ['stage','type','status','priority'].forEach(k => clearMs(k));
   document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
   applyFilters();
+}
+
+function exportCSV() {
+  if (!filteredTickets.length) { alert('No tickets to export.'); return; }
+  const cols = ['ID','Source','Title','Type','Priority','Status','Stage','Requester','Assignee','Due Date','Jira Ref','Change Ticket No','Project','Notes','Description'];
+  const esc  = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const rows = [cols.map(esc).join(',')];
+  filteredTickets.forEach(t => rows.push(cols.map(c => esc(t[c])).join(',')));
+  const blob = new Blob([rows.join('\r\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tickets_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function toggleHideResolved() {
