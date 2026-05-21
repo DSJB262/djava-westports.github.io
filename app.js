@@ -77,14 +77,11 @@ const DEFAULT_SLA = {
 let slaDays = JSON.parse(localStorage.getItem('tracker_sla') || 'null') || { ...DEFAULT_SLA };
 
 const DEV_STAGES = new Set([
-  'Requires Fix / Development', 'Pending Development', 'Development In Progress',
-  'Pending Testing', 'Testing In Progress', 'Plan for Release',
-  'Pending CAB Approval', 'Implementation In Progress', 'Rolled Back'
+  'Pending Development', 'Development In Progress',
+  'Pending Testing', 'Testing In Progress'
 ]);
 const SUPPORT_STAGES = new Set([
-  'Requested / Reported', 'Troubleshooting / Investigation',
-  'Pending URS', 'Pending Mandays Estimation',
-  'Pending Revised Mandays', 'Pending Mandays / CR Approval'
+  'Requested / Reported', 'Troubleshooting / Investigation'
 ]);
 
 // ============================================================
