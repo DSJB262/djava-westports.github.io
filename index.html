@@ -69,16 +69,16 @@
 <header class="header">
   <h1><img src="favicon.svg" alt="" style="height:32px;width:32px;object-fit:contain;vertical-align:middle;margin-right:8px">Djava-Westports Project Tracker</h1>
   <div class="header-nav">
-    <button class="nav-tab active" id="tab-tickets"   onclick="showView('tickets')">📋 Tickets</button>
-    <button class="nav-tab"        id="tab-dashboard" onclick="showView('dashboard')">📊 Dashboard</button>
-    <button class="nav-tab"        id="tab-cab"       onclick="showView('cab')">🏛 CAB</button>
+    <button class="nav-tab active" id="tab-tickets"   onclick="showView('tickets')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Tickets</button>
+    <button class="nav-tab"        id="tab-dashboard" onclick="showView('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>Dashboard</button>
+    <button class="nav-tab"        id="tab-cab"       onclick="showView('cab')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="9" width="18" height="13"/><polyline points="1 9 12 2 23 9"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/></svg>CAB</button>
   </div>
   <div class="header-right">
     <div class="user-badge" id="user-badge"></div>
-    <button class="btn btn-outline btn-sm" id="btn-refresh" onclick="loadTickets()">↻ Refresh</button>
-    <button class="btn btn-outline btn-sm" id="btn-check-email" onclick="checkEmailTickets()" title="Scan Gmail for RE- emails">📧 Check Email</button>
-    <button class="btn btn-outline btn-sm" id="btn-settings" onclick="openSettings()">⚙️ Settings</button>
-    <button class="btn btn-primary" onclick="openCreateModal()">+ New Ticket</button>
+    <button class="btn btn-outline btn-sm" id="btn-refresh" onclick="loadTickets()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh</button>
+    <button class="btn btn-outline btn-sm" id="btn-check-email" onclick="checkEmailTickets()" title="Scan Gmail for RE- emails"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Check Email</button>
+    <button class="btn btn-outline btn-sm" id="btn-settings" onclick="openSettings()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+    <button class="btn btn-primary" onclick="openCreateModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Ticket</button>
   </div>
 </header>
 
@@ -122,9 +122,9 @@
     <select id="filter-assignee" class="filter-select" onchange="applyFilters()">
       <option value="">All Assignees</option>
     </select>
-    <button id="btn-hide-resolved" class="btn btn-outline btn-sm active-filter-btn" onclick="toggleHideResolved()">👁 Show Resolved</button>
-    <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
-    <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Download visible tickets as CSV">⬇ Download</button>
+    <button id="btn-hide-resolved" class="btn btn-outline btn-sm active-filter-btn" onclick="toggleHideResolved()"><svg id="icon-eye" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Show Resolved</button>
+    <button class="btn btn-outline btn-sm" onclick="clearFilters()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Clear</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Download visible tickets as CSV"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button>
   </div>
 
   <div class="ticket-container">
@@ -132,7 +132,7 @@
       <div class="spinner"></div><p>Loading tickets…</p>
     </div>
     <div id="empty-state" class="empty-state hidden">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
       <h3>No tickets found</h3>
       <p>Create a new ticket or adjust your filters.</p>
       <button class="btn btn-primary btn-new" onclick="openCreateModal()">+ New Ticket</button>
@@ -179,14 +179,14 @@
     </div>
   </div>
 
-  <div class="dash-section-heading">🔨 Development & Testing Workload</div>
+  <div class="dash-section-heading"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Development &amp; Testing Workload</div>
   <div id="dash-dev-cards" class="dash-dev-grid"></div>
 
-  <div class="dash-section-heading">🔍 Support & Investigation Workload</div>
+  <div class="dash-section-heading"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Support &amp; Investigation Workload</div>
   <div style="font-size:12px;color:#6B7280;margin:-8px 0 10px">Tickets in investigation/pending stages by Assignee. &nbsp;<span style="color:#D97706">⚠ ManageEngine has no API — tickets come from email only. Ensure email auto-check is enabled in Settings.</span></div>
   <div id="dash-support-cards" class="dash-dev-grid"></div>
 
-  <div class="dash-section-heading">📋 All Active Tickets — Stage Progress</div>
+  <div class="dash-section-heading"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>All Active Tickets — Stage Progress</div>
   <div class="dash-card" style="padding:0;overflow:hidden">
     <table class="progress-table">
       <thead>
@@ -205,7 +205,7 @@
 <div id="view-cab" class="hidden">
   <div class="cab-summary-row" id="cab-summary"></div>
 
-  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px">🏛 CAB Pipeline — Change Tickets</div>
+  <div class="dash-card-title" style="margin:20px 0 12px;font-size:15px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><rect x="3" y="9" width="18" height="13"/><polyline points="1 9 12 2 23 9"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/></svg>CAB Pipeline — Change Tickets</div>
   <div class="dash-card" style="padding:0;overflow:hidden">
     <div id="cab-loading" class="loading" style="padding:32px">
       <div class="spinner"></div><p>Loading CAB data…</p>
@@ -229,7 +229,7 @@
       <tbody id="cab-tbody"></tbody>
     </table>
     <div id="cab-empty" class="empty-state hidden" style="padding:32px">
-      <div class="empty-icon">🏛</div>
+      <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="13"/><polyline points="1 9 12 2 23 9"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/></svg></div>
       <h3>No CAB tickets</h3>
       <p>Tickets with a Change Ticket No or in a CAB stage will appear here.</p>
     </div>
@@ -442,7 +442,7 @@
     <div class="modal-header">
       <div>
         <div style="font-size:12px;color:#6B7280;margin-bottom:2px" id="prog-jira-id"></div>
-        <h2>📊 Track Progress</h2>
+        <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>Track Progress</h2>
       </div>
       <button class="modal-close" onclick="closeModal('progress-modal')">✕</button>
     </div>
@@ -560,7 +560,7 @@
 <div class="modal-overlay hidden" id="settings-modal">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2>⚙️ Settings</h2>
+      <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</h2>
       <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
     </div>
     <div class="modal-body">
@@ -609,7 +609,7 @@
           • <strong>Request with ID: ##RE-XXXXX## … has been Closed</strong> → closes the matching ticket.
         </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
-          <button class="btn btn-outline btn-sm" onclick="checkEmailTickets()">📧 Check Now</button>
+          <button class="btn btn-outline btn-sm" onclick="checkEmailTickets()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Check Now</button>
           <select id="email-interval-select" class="filter-select" style="font-size:12px;padding:6px 10px">
             <option value="5">Every 5 min</option>
             <option value="10">Every 10 min</option>
@@ -617,7 +617,7 @@
             <option value="30">Every 30 min</option>
             <option value="60">Every 60 min</option>
           </select>
-          <button class="btn btn-outline btn-sm" onclick="setupEmailTrigger()">⏱ Enable Auto-Check</button>
+          <button class="btn btn-outline btn-sm" onclick="setupEmailTrigger()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Enable Auto-Check</button>
         </div>
         <div id="email-check-status" style="margin-top:8px;font-size:12px;color:#6B7280"></div>
       </div>
@@ -657,7 +657,7 @@
       <hr>
 
       <div class="settings-section">
-        <h3>⏰ SLA Targets (days per stage)</h3>
+        <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>SLA Targets (days per stage)</h3>
         <p class="text-muted">Max days a ticket should stay in each stage. Age badge turns red with ⚠ when exceeded. Requires <em>Updated Date</em> field from your GAS backend.</p>
         <div id="sla-form" class="sla-grid"></div>
         <div style="margin-top:10px;display:flex;gap:8px">
@@ -670,7 +670,7 @@
       <hr>
 
       <div class="settings-section">
-        <h3>🔔 Daily Developer Reminder</h3>
+        <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Daily Developer Reminder</h3>
         <p class="text-muted">Sends each developer an email at the chosen hour listing their open tickets. Requires <code>sendDailyReminders</code> action in your GAS backend (see GAS code below).</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
           <select id="reminder-hour" class="filter-select" style="font-size:12px;padding:6px 10px">
@@ -679,7 +679,7 @@
             <option value="9">9:00 AM</option>
             <option value="10">10:00 AM</option>
           </select>
-          <button class="btn btn-outline btn-sm" onclick="setupReminderTrigger()">⏱ Enable Daily Reminder</button>
+          <button class="btn btn-outline btn-sm" onclick="setupReminderTrigger()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Enable Daily Reminder</button>
         </div>
         <div id="reminder-status" style="margin-top:8px;font-size:12px"></div>
       </div>
