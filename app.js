@@ -796,7 +796,7 @@ function viewTicket(id) {
   const pipeline = STAGES.map((s, i) => {
     const cls = i < currentIdx ? 'done' : i === currentIdx ? 'active' : '';
     return `<div class="pipeline-step ${cls}">
-      <div class="pipeline-dot">${i < currentIdx ? '✓' : i + 1}</div>
+      <div class="pipeline-dot">${i < currentIdx ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : i + 1}</div>
       <div class="pipeline-label">${x(s)}</div>
     </div>`;
   }).join('');
@@ -1069,7 +1069,7 @@ async function checkEmailTickets() {
     if (statusEl) { statusEl.textContent = '✗ ' + err.message; statusEl.style.color = '#EF4444'; }
     else alert('Email check failed: ' + err.message);
   } finally {
-    if (btn) { btn.textContent = '📧 Check Email'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Check Email'; btn.disabled = false; }
   }
 }
 
@@ -1360,9 +1360,12 @@ function renderCabTable(list, tableEl, emptyEl) {
   if (!list.length) { emptyEl.classList.remove('hidden'); return; }
   tableEl.classList.remove('hidden');
 
+  const svgCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const svgCross = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
   const doc = (has, label) =>
     `<span class="cab-doc-check ${has ? 'ok' : 'miss'}" title="${has ? label + ' uploaded' : label + ' missing'}">
-      ${has ? '✓' : '✗'}
+      ${has ? svgCheck : svgCross}
     </span>`;
 
   const cabCls = s => s === 'Approved' ? 'cab-approved' : s === 'Rejected' ? 'cab-rejected' : s ? 'cab-pending' : '';
@@ -1393,8 +1396,8 @@ function renderCabTable(list, tableEl, emptyEl) {
       <td style="text-align:center">${doc(t['Doc ORA'], 'ORA Form')}</td>
       <td style="text-align:center">
         ${t['CAB Ready']
-          ? `<span class="cab-ready-badge ok">✓ Ready</span>`
-          : `<span class="cab-ready-badge miss">✗ Not Ready</span>`}
+          ? `<span class="cab-ready-badge ok">${svgCheck} Ready</span>`
+          : `<span class="cab-ready-badge miss">${svgCross} Not Ready</span>`}
       </td>
       <td>${t['CAB Status'] ? `<span class="badge ${cabCls(t['CAB Status'])}">${x(t['CAB Status'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
       <td>${(() => {
@@ -1406,7 +1409,7 @@ function renderCabTable(list, tableEl, emptyEl) {
         if (!t['Change Ticket No']) missing.push('Change Ticket No');
         return missing.length
           ? missing.map(m => `<span class="miss-item">${m}</span>`).join(' ')
-          : '<span class="miss-item-ok">✓ Complete</span>';
+          : `<span class="miss-item-ok">${svgCheck} Complete</span>`;
       })()}</td>
     </tr>`;
   }).join('');
