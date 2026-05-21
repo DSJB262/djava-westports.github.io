@@ -384,13 +384,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>CAB Change Type</label>
-            <select id="f-cab-change-type">
-              <option value="">— Select —</option>
-              <option>Warfile Deployment</option>
-              <option>Data Patch</option>
-              <option>DB Change</option>
-              <option>New .exe File Installation</option>
-            </select>
+            <div class="cab-type-checks" id="f-cab-change-type-wrap">
+              <label class="check-opt"><input type="checkbox" value="Warfile Deployment"> Warfile Deployment</label>
+              <label class="check-opt"><input type="checkbox" value="Data Patch"> Data Patch</label>
+              <label class="check-opt"><input type="checkbox" value="DB Change"> DB Change</label>
+              <label class="check-opt"><input type="checkbox" value="New .exe File Installation"> New .exe File Installation</label>
+            </div>
           </div>
           <div class="form-group">
             <label>CAB Date</label>
@@ -519,13 +518,12 @@
       <div class="form-row">
         <div class="form-group">
           <label>CAB Change Type</label>
-          <select id="p-cab-change-type">
-            <option value="">— Select —</option>
-            <option>Warfile Deployment</option>
-            <option>Data Patch</option>
-            <option>DB Change</option>
-            <option>New .exe File Installation</option>
-          </select>
+          <div class="cab-type-checks" id="p-cab-change-type-wrap">
+            <label class="check-opt"><input type="checkbox" value="Warfile Deployment"> Warfile Deployment</label>
+            <label class="check-opt"><input type="checkbox" value="Data Patch"> Data Patch</label>
+            <label class="check-opt"><input type="checkbox" value="DB Change"> DB Change</label>
+            <label class="check-opt"><input type="checkbox" value="New .exe File Installation"> New .exe File Installation</label>
+          </div>
         </div>
         <div class="form-group">
           <label>CAB Date</label>

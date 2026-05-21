@@ -622,7 +622,7 @@ function openCreateModal() {
   document.getElementById('f-status').value        = 'Open';
   document.getElementById('f-stage').value         = 'Requested / Reported';
   document.getElementById('f-priority').value      = 'Medium';
-  document.getElementById('f-cab-change-type').value = '';
+  setCabChangeType('f-cab-change-type-wrap', '');
   setFormMs('f-pic-impl', '');
   fillAssigneeSelect('f-assignee', '');
   openModal('ticket-modal');
@@ -650,7 +650,7 @@ function editTicket(id) {
   document.getElementById('f-release-date').value         = toDatetimeLocal(t['Release Date']);
   document.getElementById('f-release-version').value      = t['Release Version'] || '';
   document.getElementById('f-change-ticket').value        = t['Change Ticket No']|| '';
-  document.getElementById('f-cab-change-type').value      = t['CAB Change Type'] || '';
+  setCabChangeType('f-cab-change-type-wrap', t['CAB Change Type'] || '');
   document.getElementById('f-cab-date').value             = toDatetimeLocal(t['CAB Date']);
   document.getElementById('f-cab-status').value           = t['CAB Status']      || '';
   fillAssigneeSelect('f-assignee', t.Assignee || '');
@@ -683,7 +683,7 @@ async function saveTicket() {
     'Release Date':     document.getElementById('f-release-date').value,
     'Release Version':  document.getElementById('f-release-version').value.trim(),
     'Change Ticket No': document.getElementById('f-change-ticket').value.trim(),
-    'CAB Change Type':  document.getElementById('f-cab-change-type').value,
+    'CAB Change Type':  getCabChangeType('f-cab-change-type-wrap'),
     'CAB Date':         document.getElementById('f-cab-date').value,
     'CAB Status':       document.getElementById('f-cab-status').value,
     'Description':      document.getElementById('f-description').value.trim(),
@@ -718,7 +718,7 @@ function openProgressModal(id) {
   document.getElementById('p-release-date').value       = toDatetimeLocal(t['Release Date']);
   document.getElementById('p-release-version').value    = t['Release Version'] || '';
   document.getElementById('p-change-ticket').value      = t['Change Ticket No']|| '';
-  document.getElementById('p-cab-change-type').value    = t['CAB Change Type'] || '';
+  setCabChangeType('p-cab-change-type-wrap', t['CAB Change Type'] || '');
   document.getElementById('p-cab-date').value           = toDatetimeLocal(t['CAB Date']);
   document.getElementById('p-cab-status').value         = t['CAB Status']      || '';
   document.getElementById('p-notes').value              = t.Notes              || '';
@@ -740,7 +740,7 @@ async function saveProgress() {
     'Release Date':     document.getElementById('p-release-date').value,
     'Release Version':  document.getElementById('p-release-version').value.trim(),
     'Change Ticket No': document.getElementById('p-change-ticket').value.trim(),
-    'CAB Change Type':  document.getElementById('p-cab-change-type').value,
+    'CAB Change Type':  getCabChangeType('p-cab-change-type-wrap'),
     'CAB Date':         document.getElementById('p-cab-date').value,
     'CAB Status':       document.getElementById('p-cab-status').value,
     'Notes':            document.getElementById('p-notes').value.trim()
@@ -858,7 +858,7 @@ function viewTicket(id) {
       <div class="detail-field"><label>Release Date</label><div class="val">${fmt(t['Release Date'])}</div></div>
       <div class="detail-field"><label>Release Version</label><div class="val">${x(t['Release Version']||'—')}</div></div>
       <div class="detail-field"><label>Change Ticket No</label><div class="val">${x(t['Change Ticket No']||'—')}</div></div>
-      <div class="detail-field"><label>CAB Change Type</label><div class="val">${x(t['CAB Change Type']||'—')}</div></div>
+      <div class="detail-field"><label>CAB Change Type</label><div class="val">${t['CAB Change Type'] ? t['CAB Change Type'].split(',').map(v => `<span class="cab-change-type-badge">${x(v.trim())}</span>`).join('') : '—'}</div></div>
       <div class="detail-field"><label>CAB Date</label><div class="val">${fmt(t['CAB Date'])}</div></div>
       <div class="detail-field"><label>CAB Status</label>
         <div class="val">${t['CAB Status'] ? `<span class="badge ${cabCls}">${x(t['CAB Status'])}</span>` : '—'}</div></div>
@@ -1388,7 +1388,9 @@ function renderCabTable(list, tableEl, emptyEl) {
         <div class="t-title" onclick="viewTicket('${x(t.ID)}');showView('tickets')">${x(t.Title)}</div>
         <div class="t-sub">${x(t.Stage || '')}</div>
       </td>
-      <td>${t['CAB Change Type'] ? `<span class="cab-change-type-badge">${x(t['CAB Change Type'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+      <td>${t['CAB Change Type']
+        ? t['CAB Change Type'].split(',').map(v => `<span class="cab-change-type-badge">${x(v.trim())}</span>`).join('')
+        : '<span style="color:#9CA3AF">—</span>'}</td>
       <td>${x(t['Change Ticket No'] || '—')}</td>
       <td>${fmt(t['CAB Date'])}</td>
       <td style="text-align:center">${doc(t['Doc MOP'], 'MOP')}</td>
@@ -1695,6 +1697,21 @@ function openModal(id)  { document.getElementById(id).classList.remove('hidden')
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function show(id)       { document.getElementById(id).classList.remove('hidden'); }
 function slug(s)        { return s.toLowerCase().replace(/\s+/g, '-'); }
+
+function setCabChangeType(wrapperId, value) {
+  const wrap = document.getElementById(wrapperId);
+  if (!wrap) return;
+  const vals = (value || '').split(',').map(v => v.trim()).filter(Boolean);
+  wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = vals.includes(cb.value);
+  });
+}
+
+function getCabChangeType(wrapperId) {
+  const wrap = document.getElementById(wrapperId);
+  if (!wrap) return '';
+  return Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value).join(', ');
+}
 
 function toDatetimeLocal(val) {
   if (!val) return '';
