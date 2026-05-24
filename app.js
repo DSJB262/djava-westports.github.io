@@ -53,6 +53,15 @@ const msState = {};
 const DEVS  = ['Akmal','Indra','Mahmood','Razin','Jay','Joseph'];
 const IMPLS = ['Sharron - warfile','Yusuf - DB','Fikri - DB'];
 
+const JIRA_APP_MAP = {
+  'WPSCSSSUP': 'SCSS',
+  'CARGOMOVE': 'SCSS',
+  'WPCRONJOBS': 'CronJob',
+  'WPSWDCSUP': 'WDC',
+  'WPCBASSUP': 'CBAS',
+  'WPEDICSUP': 'EDIC',
+};
+
 const CAB_CHANGE_TYPES = ['Warfile Deployment','Data Patch','DB Change','New .exe File Installation'];
 
 let chartDev = null, chartStage = null, chartStatus = null;
@@ -270,6 +279,7 @@ async function loadTickets() {
     const data = await apiGet({ action: 'getAllTickets' });
     if (data.error) throw new Error(data.error);
     tickets = data.tickets ? data.tickets : (Array.isArray(data) ? data : []);
+    tickets.forEach(t => { if (!t.Application && t['Jira Ref']) t.Application = detectAppFromJiraRef(t['Jira Ref']); });
     if (data.jiraError) showBanner('jira-warning', '⚠️', 'Jira issue: ' + data.jiraError, '#FEF3C7', '#92400E');
     renderTable(tickets);
     renderStats(tickets);
@@ -619,6 +629,17 @@ function setFormMs(containerId, value) {
 // Create / Edit (Manual)
 // ============================================================
 
+function detectAppFromJiraRef(ref) {
+  const prefix = (ref || '').trim().toUpperCase().split('-')[0];
+  return JIRA_APP_MAP[prefix] || '';
+}
+
+function onJiraRefInput() {
+  const ref = document.getElementById('f-jira-ref').value;
+  const app = detectAppFromJiraRef(ref);
+  if (app) document.getElementById('f-application').value = app;
+}
+
 function openCreateModal() {
   if (!API_URL) { openSettings(); return; }
   document.getElementById('modal-title').textContent = 'New Ticket';
@@ -651,7 +672,7 @@ function editTicket(id) {
   document.getElementById('f-notes').value                = t.Notes              || '';
   document.getElementById('f-due-date').value             = toDatetimeLocal(t['Due Date']);
   document.getElementById('f-jira-ref').value             = t['Jira Ref']        || '';
-  document.getElementById('f-application').value          = t.Application        || '';
+  document.getElementById('f-application').value          = t.Application        || detectAppFromJiraRef(t['Jira Ref']);
   setFormMs('f-pic-dev',  t['PIC Dev']  || '');
   setFormMs('f-pic-test', t['PIC Test'] || '');
   setFormMs('f-pic-impl', t['PIC Impl'] || '');
