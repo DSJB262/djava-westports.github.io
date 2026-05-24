@@ -314,7 +314,7 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 .header-nav { display: flex; gap: 4px; }
 .nav-tab {
   padding: 6px 16px; border-radius: 8px; border: none;
-  cursor: pointer; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap;
   background: transparent; color: var(--gray-500);
   transition: all 0.15s;
 }
