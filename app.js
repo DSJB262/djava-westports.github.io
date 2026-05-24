@@ -187,7 +187,11 @@ function initApp() {
   else { loadTickets(); loadAssignees(); }
 
   initMultiSelects();
+  initImplMultiSelect('f-pic-dev',  DEVS);
+  initImplMultiSelect('f-pic-test', DEVS);
   initImplMultiSelect('f-pic-impl');
+  initImplMultiSelect('p-pic-dev',  DEVS);
+  initImplMultiSelect('p-pic-test', DEVS);
   initImplMultiSelect('p-pic-impl');
   syncHideResolvedBtn();
 
@@ -550,7 +554,8 @@ function clearMs(key) {
 // PIC Implementor Multi-Select (form-level)
 // ============================================================
 
-function initImplMultiSelect(containerId) {
+function initImplMultiSelect(containerId, options) {
+  const opts      = options || IMPLS;
   const container = document.getElementById(containerId);
   if (!container) return;
   container.className = 'form-ms-wrap';
@@ -561,7 +566,7 @@ function initImplMultiSelect(containerId) {
       <span class="ms-arrow">▾</span>
     </div>
     <div class="ms-drop hidden" id="msdrop-${key}">
-      ${IMPLS.map(o =>
+      ${opts.map(o =>
         `<label class="ms-opt"><input type="checkbox" value="${x(o)}" onchange="onFormMsChange('${key}')">${x(o)}</label>`
       ).join('')}
     </div>`;
@@ -641,8 +646,8 @@ function editTicket(id) {
   document.getElementById('f-notes').value                = t.Notes              || '';
   document.getElementById('f-due-date').value             = toDatetimeLocal(t['Due Date']);
   document.getElementById('f-jira-ref').value             = t['Jira Ref']        || '';
-  setSelectOrFirst('f-pic-dev',  t['PIC Dev']  || '');
-  setSelectOrFirst('f-pic-test', t['PIC Test'] || '');
+  setFormMs('f-pic-dev',  t['PIC Dev']  || '');
+  setFormMs('f-pic-test', t['PIC Test'] || '');
   setFormMs('f-pic-impl', t['PIC Impl'] || '');
   document.getElementById('f-release-date').value         = toDatetimeLocal(t['Release Date']);
   document.getElementById('f-release-version').value      = t['Release Version'] || '';
@@ -674,8 +679,8 @@ async function saveTicket() {
     'Requester':        document.getElementById('f-requester').value.trim(),
     'Due Date':         document.getElementById('f-due-date').value,
     'Jira Ref':         document.getElementById('f-jira-ref').value.trim(),
-    'PIC Dev':          document.getElementById('f-pic-dev').value.trim(),
-    'PIC Test':         document.getElementById('f-pic-test').value.trim(),
+    'PIC Dev':          getFormMs('f-pic-dev'),
+    'PIC Test':         getFormMs('f-pic-test'),
     'PIC Impl':         getFormMs('f-pic-impl'),
     'Release Date':     document.getElementById('f-release-date').value,
     'Release Version':  document.getElementById('f-release-version').value.trim(),
@@ -709,8 +714,8 @@ function openProgressModal(id) {
 
   document.getElementById('prog-jira-id').textContent  = t.ID + ' — ' + t.Title;
   document.getElementById('p-stage').value              = t.Stage              || 'Requested / Reported';
-  setSelectOrFirst('p-pic-dev',  t['PIC Dev']  || '');
-  setSelectOrFirst('p-pic-test', t['PIC Test'] || '');
+  setFormMs('p-pic-dev',  t['PIC Dev']  || '');
+  setFormMs('p-pic-test', t['PIC Test'] || '');
   setFormMs('p-pic-impl', t['PIC Impl'] || '');
   document.getElementById('p-release-date').value       = toDatetimeLocal(t['Release Date']);
   document.getElementById('p-release-version').value    = t['Release Version'] || '';
@@ -731,8 +736,8 @@ async function saveProgress() {
   const progress = {
     'Jira ID':          id,
     'Stage':            document.getElementById('p-stage').value,
-    'PIC Dev':          document.getElementById('p-pic-dev').value.trim(),
-    'PIC Test':         document.getElementById('p-pic-test').value.trim(),
+    'PIC Dev':          getFormMs('p-pic-dev'),
+    'PIC Test':         getFormMs('p-pic-test'),
     'PIC Impl':         getFormMs('p-pic-impl'),
     'Release Date':     document.getElementById('p-release-date').value,
     'Release Version':  document.getElementById('p-release-version').value.trim(),
@@ -844,8 +849,8 @@ function viewTicket(id) {
     ${(t['PIC Dev'] || t['PIC Test'] || t['PIC Impl']) ? `
     <div class="detail-section-title">Person in Charge</div>
     <div class="detail-grid">
-      <div class="detail-field"><label>PIC Developer</label><div class="val">${t['PIC Dev'] ? `<span class="pic-chip">${x(t['PIC Dev'])}</span>` : '—'}</div></div>
-      <div class="detail-field"><label>PIC Tester</label><div class="val">${t['PIC Test'] ? `<span class="pic-chip">${x(t['PIC Test'])}</span>` : '—'}</div></div>
+      <div class="detail-field"><label>PIC Developer</label><div class="val">${t['PIC Dev'] ? t['PIC Dev'].split(',').map(v=>`<span class="pic-chip">${x(v.trim())}</span>`).join(' ') : '—'}</div></div>
+      <div class="detail-field"><label>PIC Tester</label><div class="val">${t['PIC Test'] ? t['PIC Test'].split(',').map(v=>`<span class="pic-chip">${x(v.trim())}</span>`).join(' ') : '—'}</div></div>
       <div class="detail-field"><label>PIC Implementor</label><div class="val">${implDisplay}</div></div>
     </div>` : ''}
 
@@ -1474,12 +1479,14 @@ function renderDashSummary(active) {
 function renderDevCards(active) {
   const grid = document.getElementById('dash-dev-cards');
   const cards = DEVS.map(dev => {
-    const devTickets = active.filter(t =>
-      DEV_STAGES.has(t.Stage) && (
-        t['PIC Dev'] === dev || t['PIC Test'] === dev ||
-        (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
-      )
-    );
+    const devTickets = active.filter(t => {
+      const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
+      const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
+      const implList = (t['PIC Impl'] || '').split(',').map(v => v.trim());
+      return DEV_STAGES.has(t.Stage) && (
+        devList.includes(dev) || testList.includes(dev) || implList.includes(dev)
+      );
+    });
     if (!devTickets.length) return `
       <div class="dev-card dev-card-empty">
         <div class="dev-avatar">${dev[0]}</div>
@@ -1488,9 +1495,11 @@ function renderDevCards(active) {
       </div>`;
 
     const rows = devTickets.slice(0, 5).map(t => {
+      const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
+      const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const pct  = STAGE_PCT[t.Stage] || 0;
-      const role = t['PIC Dev'] === dev ? 'Dev'
-                 : t['PIC Test'] === dev ? 'Test'
+      const role = devList.includes(dev) ? 'Dev'
+                 : testList.includes(dev) ? 'Test'
                  : (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev) ? 'Impl'
                  : 'Assigned';
       const pCls = 'p-' + slug(t.Priority || '');
@@ -1606,8 +1615,8 @@ function renderProgressTable(active) {
           <div class="t-title" onclick="viewTicket('${x(t.ID)}');showView('tickets')">${x(t.Title)}</div>
           <div class="t-sub"><span class="badge ${sCls}" style="font-size:10px">${x(t.Status||'')}</span></div>
         </td>
-        <td>${t['PIC Dev']  ? `<span class="pic-chip">${x(t['PIC Dev'])}</span>`  : '<span style="color:#9CA3AF">—</span>'}</td>
-        <td>${t['PIC Test'] ? `<span class="pic-chip">${x(t['PIC Test'])}</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+        <td>${t['PIC Dev']  ? t['PIC Dev'].split(',').map(v=>`<span class="pic-chip" style="font-size:10px">${x(v.trim())}</span>`).join(' ')  : '<span style="color:#9CA3AF">—</span>'}</td>
+        <td>${t['PIC Test'] ? t['PIC Test'].split(',').map(v=>`<span class="pic-chip" style="font-size:10px">${x(v.trim())}</span>`).join(' ') : '<span style="color:#9CA3AF">—</span>'}</td>
         <td>${implChips}</td>
         <td><span class="stage-badge">${x(t.Stage || 'Not set')}</span></td>
         <td>
@@ -1628,12 +1637,14 @@ function renderCharts(active) {
   if (chartStatus) { chartStatus.destroy(); chartStatus = null; }
 
   const devCounts = DEVS.map(dev =>
-    active.filter(t =>
-      DEV_STAGES.has(t.Stage) && (
-        t['PIC Dev'] === dev || t['PIC Test'] === dev ||
-        (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev)
-      )
-    ).length
+    active.filter(t => {
+      const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
+      const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
+      const implList = (t['PIC Impl'] || '').split(',').map(v => v.trim());
+      return DEV_STAGES.has(t.Stage) && (
+        devList.includes(dev) || testList.includes(dev) || implList.includes(dev)
+      );
+    }).length
   );
   chartDev = new Chart(document.getElementById('chart-dev'), {
     type: 'bar',
