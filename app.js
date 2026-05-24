@@ -1148,12 +1148,13 @@ function hideBanner(id) { const el = document.getElementById(id); if (el) el.rem
 // ============================================================
 
 function showView(view) {
-  ['tickets','dashboard','cab'].forEach(v => {
+  ['tickets','dashboard','cab','versions'].forEach(v => {
     document.getElementById('view-' + v).classList.toggle('hidden', view !== v);
     document.getElementById('tab-'  + v).classList.toggle('active', view === v);
   });
   if (view === 'dashboard') renderDashboard();
   if (view === 'cab')       loadCabDashboard();
+  if (view === 'versions')  initVersionsView();
 }
 
 // ============================================================
@@ -1522,4 +1523,30 @@ function x(s) {
   return String(s ?? '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ============================================================
+// App Versions View
+// ============================================================
+
+const APP_VERSIONS = {
+  'ver-cbas-web':  '2.75.2',
+  'ver-cbas-vm':   '2.73.0',
+  'ver-scss-wdc':  '5.54.4',
+  'ver-scss-rgs':  '5.54.0',
+  'ver-scss-ags':  '5.6.0',
+  'ver-scss-swim': '5.54.0',
+  'ver-scss-cm':   '5.54.2',
+  'ver-scss-web':  '5.54.2',
+  'ver-cronjob':   '1.7.0',
+  'ver-edic':      '2.89.1',
+};
+
+function initVersionsView() {
+  Object.entries(APP_VERSIONS).forEach(([id, ver]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = ver;
+  });
+  const upd = document.getElementById('versions-last-updated');
+  if (upd) upd.textContent = '24 May 2025';
 }

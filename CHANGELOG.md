@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-24
+
+### App Versions Tab
+- Added **📦 App Versions** navigation tab
+- Displays current deployed versions for all 10 Westports systems:
+  - CBAS Web 2.75.2, CBAS VM 2.73.0
+  - SCSS WDC 5.54.4, SCSS RGS 5.54.0, SCSS AGS 5.6.0, SCSS SWIM 5.54.0, SCSS CM 5.54.2, SCSS Web 5.54.2
+  - CronJob 1.7.0, EDIC 2.89.1
+- Responsive grid (5 columns → 4 → 3 → 2 on smaller screens)
+
+---
+
 ## 2026-05-15
 
 ### Ticket Table
