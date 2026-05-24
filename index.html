@@ -153,6 +153,14 @@
     <div class="ms-wrap" id="ms-type"></div>
     <div class="ms-wrap" id="ms-status"></div>
     <div class="ms-wrap" id="ms-priority"></div>
+    <select id="filter-app" class="filter-select" onchange="applyFilters()">
+      <option value="">All Applications</option>
+      <option value="CBAS">CBAS</option>
+      <option value="SCSS">SCSS</option>
+      <option value="WDC">WDC</option>
+      <option value="EDIC">EDIC</option>
+      <option value="CronJob">CronJob</option>
+    </select>
     <select id="filter-assignee" class="filter-select" onchange="applyFilters()">
       <option value="">All Assignees</option>
     </select>
@@ -434,6 +442,17 @@
           <div class="form-group">
             <label>Jira Reference</label>
             <input id="f-jira-ref" type="text" placeholder="e.g. WPSCSSSUP-217">
+          </div>
+          <div class="form-group">
+            <label>Application</label>
+            <select id="f-application">
+              <option value="">— Select —</option>
+              <option>CBAS</option>
+              <option>SCSS</option>
+              <option>WDC</option>
+              <option>EDIC</option>
+              <option>CronJob</option>
+            </select>
           </div>
         </div>
         <div class="form-row">

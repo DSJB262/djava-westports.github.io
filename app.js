@@ -435,16 +435,18 @@ function applyFilters() {
   const st = msState.status   || new Set();
   const pr = msState.priority || new Set();
   const as = document.getElementById('filter-assignee').value;
+  const ap = document.getElementById('filter-app').value;
 
   renderTable(tickets.filter(t => {
     if (hideResolved && st.size === 0 && (t.Status === 'Resolved' || t.Status === 'Closed')) return false;
     if (q  && !['Title','Description','ID','Requester','Notes','Project','Jira Ref','Change Ticket No'].some(k => (t[k]||'').toLowerCase().includes(q))) return false;
-    if (sr && t.Source   !== sr) return false;
+    if (sr && t.Source      !== sr) return false;
     if (sg.size && !sg.has(t.Stage    || '')) return false;
     if (ty.size && !ty.has(t.Type     || '')) return false;
     if (st.size && !st.has(t.Status   || '')) return false;
     if (pr.size && !pr.has(t.Priority || '')) return false;
-    if (as && t.Assignee !== as) return false;
+    if (as && t.Assignee    !== as) return false;
+    if (ap && t.Application !== ap) return false;
     return true;
   }));
 }
@@ -453,6 +455,7 @@ function clearFilters() {
   document.getElementById('search').value = '';
   document.getElementById('filter-source').value = '';
   document.getElementById('filter-assignee').value = '';
+  document.getElementById('filter-app').value = '';
   ['stage','type','status','priority'].forEach(k => clearMs(k));
   document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
   applyFilters();
@@ -625,6 +628,8 @@ function openCreateModal() {
   document.getElementById('f-stage').value         = 'Requested / Reported';
   document.getElementById('f-priority').value      = 'Medium';
   setCabChangeType('f-cab-change-type-wrap', '');
+  setFormMs('f-pic-dev',  '');
+  setFormMs('f-pic-test', '');
   setFormMs('f-pic-impl', '');
   fillAssigneeSelect('f-assignee', '');
   openModal('ticket-modal');
@@ -646,6 +651,7 @@ function editTicket(id) {
   document.getElementById('f-notes').value                = t.Notes              || '';
   document.getElementById('f-due-date').value             = toDatetimeLocal(t['Due Date']);
   document.getElementById('f-jira-ref').value             = t['Jira Ref']        || '';
+  document.getElementById('f-application').value          = t.Application        || '';
   setFormMs('f-pic-dev',  t['PIC Dev']  || '');
   setFormMs('f-pic-test', t['PIC Test'] || '');
   setFormMs('f-pic-impl', t['PIC Impl'] || '');
@@ -679,6 +685,7 @@ async function saveTicket() {
     'Requester':        document.getElementById('f-requester').value.trim(),
     'Due Date':         document.getElementById('f-due-date').value,
     'Jira Ref':         document.getElementById('f-jira-ref').value.trim(),
+    'Application':      document.getElementById('f-application').value,
     'PIC Dev':          getFormMs('f-pic-dev'),
     'PIC Test':         getFormMs('f-pic-test'),
     'PIC Impl':         getFormMs('f-pic-impl'),
@@ -844,6 +851,9 @@ function viewTicket(id) {
       ${!isJira && t['Jira Ref'] ? `
       <div class="detail-field"><label>Jira Reference</label>
         <div class="val"><a href="https://privasia.atlassian.net/browse/${x(t['Jira Ref'])}" target="_blank" style="color:#2563EB">${x(t['Jira Ref'])}</a></div></div>` : ''}
+      ${t.Application ? `
+      <div class="detail-field"><label>Application</label>
+        <div class="val"><span class="app-chip">${x(t.Application)}</span></div></div>` : ''}
     </div>
 
     ${(t['PIC Dev'] || t['PIC Test'] || t['PIC Impl']) ? `
