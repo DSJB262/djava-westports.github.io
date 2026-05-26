@@ -1804,7 +1804,7 @@ const APP_VERSIONS = {
   'ver-scss-cm':   '5.54.2',
   'ver-scss-web':  '5.54.2',
   'ver-cronjob':   '1.7.0',
-  'ver-edic':      '2.89.1',
+  'ver-edic':      '2.89.2',
 };
 
 function initVersionsView() {
@@ -1813,5 +1813,5 @@ function initVersionsView() {
     if (el) el.textContent = ver;
   });
   const upd = document.getElementById('versions-last-updated');
-  if (upd) upd.textContent = '24 May 2025';
+  if (upd) upd.textContent = '26 May 2026';
 }
