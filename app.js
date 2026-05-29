@@ -337,25 +337,31 @@ function renderTable(list) {
 
   document.getElementById('ticket-tbody').innerHTML = list.map(t => {
     const isJira = t.Source === 'Jira';
+    const isME   = t.Source === 'ManageEngine';
     const sCls   = 's-' + slug(t.Status   || '');
     const pCls   = 'p-' + slug(t.Priority || '');
 
+    const srcBadge = isJira ? '<span class="src-badge src-jira">Jira</span>'
+      : isME                ? '<span class="src-badge src-me">ME</span>'
+      :                       '<span class="src-badge src-manual">Tracker</span>';
     const idCell = isJira
-      ? `<a class="jira-id" href="${x(t.URL)}" target="_blank">${x(t.ID)}</a><span class="src-badge src-jira">Jira</span>`
-      : `<span class="manual-id">${x(t.ID)}</span><span class="src-badge src-manual">Manual</span>`;
+      ? `<a class="jira-id" href="${x(t.URL)}" target="_blank">${x(t.ID)}</a>${srcBadge}`
+      : `<span class="manual-id">${x(t.ID)}</span>${srcBadge}`;
 
     const stage = t.Stage || '';
     const stageHtml = stage
       ? `<span class="stage-badge" title="${x(stage)}">${x(stage)}</span>`
       : `<span style="color:#9CA3AF;font-size:12px">Not set</span>`;
 
+    const trackBtn = `<button class="act-btn act-progress" onclick="openProgressModal('${x(t.ID)}')">${t.HasProgress ? '✏ Progress' : '+ Track'}</button>`;
     const actions = isJira
-      ? `<button class="act-btn act-view"     onclick="viewTicket('${x(t.ID)}')">View</button>
-         <button class="act-btn act-progress" onclick="openProgressModal('${x(t.ID)}')">${t.HasProgress ? '✏ Progress' : '+ Track'}</button>
-         <a      class="act-btn act-jira"     href="${x(t.URL)}" target="_blank">↗ Jira</a>`
-      : `<button class="act-btn act-view"     onclick="viewTicket('${x(t.ID)}')">View</button>
-         <button class="act-btn act-edit"     onclick="editTicket('${x(t.ID)}')">Edit</button>
-         <button class="act-btn act-delete"   onclick="deleteTicket('${x(t.ID)}')">Del</button>`;
+      ? `<button class="act-btn act-view" onclick="viewTicket('${x(t.ID)}')">View</button>
+         ${trackBtn}
+         <a class="act-btn act-jira" href="${x(t.URL)}" target="_blank">↗ Jira</a>`
+      : `<button class="act-btn act-view" onclick="viewTicket('${x(t.ID)}')">View</button>
+         ${trackBtn}
+         <button class="act-btn act-edit"   onclick="editTicket('${x(t.ID)}')">Edit</button>
+         <button class="act-btn act-delete" onclick="deleteTicket('${x(t.ID)}')">Del</button>`;
 
     const ageDays = (() => {
       if (!t['Created Date']) return null;
@@ -659,7 +665,7 @@ function openCreateModal() {
 function editTicket(id) {
   const t = tickets.find(t => t.ID === id);
   if (!t) return;
-  if (t.Source !== 'Manual') { alert(t.Source + ' tickets are read-only. Use "Track Progress" instead.'); return; }
+  if (t.Source === 'Jira') { alert('Jira tickets are read-only. Use "Track Progress" instead.'); return; }
   document.getElementById('modal-title').textContent      = 'Edit Ticket';
   document.getElementById('ticket-id').value              = t.ID;
   document.getElementById('f-title').value                = t.Title              || '';
@@ -697,6 +703,7 @@ async function saveTicket() {
 
   const ticket = {
     id,
+    'Source':           id ? undefined : 'Tracker',
     'Title':            title,
     'Type':             type,
     'Priority':         prio,
@@ -1301,9 +1308,9 @@ async function testConnection() {
     if (data.error) throw new Error(data.error);
     const list = data.tickets || (Array.isArray(data) ? data : []);
     const j = list.filter(t => t.Source === 'Jira').length;
-    const m = list.filter(t => t.Source === 'Manual').length;
+    const m = list.filter(t => t.Source !== 'Jira').length;
     if (data.jiraError) setStatus(`⚠ Connected — Jira error: ${data.jiraError}`, 'err');
-    else setStatus(`✓ Connected — ${j} Jira + ${m} manual`, 'ok');
+    else setStatus(`✓ Connected — ${j} Jira + ${m} local`, 'ok');
   } catch (err) { setStatus('✗ ' + err.message, 'err'); }
 }
 
