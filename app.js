@@ -1147,13 +1147,10 @@ async function loadAssignees() {
 
 function refreshAssigneeDropdown() {
   const sel = document.getElementById('filter-assignee'), cur = sel.value;
-  const activeNames = new Set(
-    tickets.filter(t => t.Status !== 'Closed' && t.Status !== 'Resolved' && t.Assignee).map(t => t.Assignee)
-  );
-  const list = assignees.filter(a => activeNames.has(a.name));
+  const names = [...new Set(tickets.filter(t => t.Assignee).map(t => t.Assignee))].sort();
   sel.innerHTML = '<option value="">All Assignees</option>' +
-    list.map(a => `<option value="${x(a.name)}">${x(a.name)}</option>`).join('');
-  sel.value = activeNames.has(cur) ? cur : '';
+    names.map(n => `<option value="${x(n)}">${x(n)}</option>`).join('');
+  sel.value = names.includes(cur) ? cur : '';
 }
 
 function fillAssigneeSelect(selId, selected) {
