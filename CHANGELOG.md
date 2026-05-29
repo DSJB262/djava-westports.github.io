@@ -2,6 +2,19 @@
 
 ---
 
+## 2026-05-29
+
+### Sidebar & Filters
+- Sidebar user name now truncates with ellipsis instead of overflowing the panel
+- Role chip (`admin`/`developer`) is no longer squeezed — stays fully visible
+- Filters bar: spacer added so Source → Assignee filters stay left-aligned, and Show Resolved / Clear / Download buttons sit at the far right
+
+### Source Badge Fix
+- Email auto-created tickets (Source = `Manual` from GAS) now correctly show **ME** (ManageEngine) badge
+- Tickets with no Source whose title matches `RE-XXXX` / `SR-` patterns also remapped to ManageEngine on load
+
+---
+
 ## 2026-05-24
 
 ### App Versions Tab

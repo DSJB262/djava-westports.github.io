@@ -205,6 +205,7 @@ body { overflow: hidden; }
   border-radius: 8px; font-size: 12px; outline: none; background: white; cursor: pointer;
   flex-shrink: 0; white-space: nowrap;
 }
+.filters-spacer { flex: 1; }
 .search-input:focus, .filter-select:focus {
   border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
 }
@@ -774,17 +775,20 @@ hr { border: none; border-top: 1px solid var(--gray-200); margin: 18px 0; }
 
 /* ---- User Badge (sidebar footer) ---- */
 .user-badge  { display: flex; flex-direction: column; gap: 8px; }
-.user-info   { display: flex; align-items: center; gap: 8px; }
+.user-info   { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
 .user-avatar {
   width: 30px; height: 30px; border-radius: 50%;
   background: var(--primary); color: white;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
-.user-name { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+.user-name {
+  font-size: 13px; font-weight: 600; color: var(--gray-700);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
 .user-role-chip {
   font-size: 10px; font-weight: 700; padding: 2px 7px;
-  border-radius: 999px; text-transform: uppercase;
+  border-radius: 999px; text-transform: uppercase; flex-shrink: 0;
 }
 .user-role-chip.admin     { background: #FEF3C7; color: #92400E; }
 .user-role-chip.developer { background: var(--primary-light); color: var(--primary); }

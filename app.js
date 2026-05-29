@@ -279,7 +279,13 @@ async function loadTickets() {
     const data = await apiGet({ action: 'getAllTickets' });
     if (data.error) throw new Error(data.error);
     tickets = data.tickets ? data.tickets : (Array.isArray(data) ? data : []);
-    tickets.forEach(t => { if (!t.Application && t['Jira Ref']) t.Application = detectAppFromJiraRef(t['Jira Ref']); });
+    tickets.forEach(t => {
+      if (!t.Application && t['Jira Ref']) t.Application = detectAppFromJiraRef(t['Jira Ref']);
+      // GAS email-auto-created tickets come in as 'Manual' — remap to match new naming
+      if (t.Source === 'Manual') t.Source = 'ManageEngine';
+      // Null/empty source tickets that match email RE-/SR- patterns are also ManageEngine
+      if (!t.Source && t.Title && /\bRE-\d+\b|\bSR-/i.test(t.Title)) t.Source = 'ManageEngine';
+    });
     if (data.jiraError) showBanner('jira-warning', '⚠️', 'Jira issue: ' + data.jiraError, '#FEF3C7', '#92400E');
     renderTable(tickets);
     renderStats(tickets);
