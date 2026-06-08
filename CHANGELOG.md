@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-06-08
+
+### Dashboard — Developer Workload Cards
+- Fixed dev/test workload cards (and matching chart counts) to match a ticket to a developer based on **role + current stage**, not just role:
+  - A ticket only counts as **Dev** work for someone if they're the assigned developer (`PIC Dev`) **and** the ticket is in `Pending Development` / `Development In Progress`
+  - A ticket only counts as **Test** work for someone if they're the assigned tester (`PIC Test`) **and** the ticket is in `Pending Testing` / `Testing In Progress`
+- Effect: once a developer's ticket moves to **Testing In Progress**, it no longer lingers under that developer's card (unless they're also the assigned tester); tickets in **Development In Progress** / **Pending Development** continue to show under the assigned developer
+
+---
+
 ## 2026-05-29
 
 ### Sidebar & Filters

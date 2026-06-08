@@ -89,6 +89,8 @@ const DEV_STAGES = new Set([
   'Pending Development', 'Development In Progress',
   'Pending Testing', 'Testing In Progress'
 ]);
+const DEV_PHASE_STAGES  = new Set(['Pending Development', 'Development In Progress']);
+const TEST_PHASE_STAGES = new Set(['Pending Testing', 'Testing In Progress']);
 const SUPPORT_STAGES = new Set([
   'Requested / Reported', 'Troubleshooting / Investigation'
 ]);
@@ -1524,9 +1526,9 @@ function renderDevCards(active) {
       const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
       const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const implList = (t['PIC Impl'] || '').split(',').map(v => v.trim());
-      return DEV_STAGES.has(t.Stage) && (
-        devList.includes(dev) || testList.includes(dev) || implList.includes(dev)
-      );
+      return (devList.includes(dev)  && DEV_PHASE_STAGES.has(t.Stage))
+          || (testList.includes(dev) && TEST_PHASE_STAGES.has(t.Stage))
+          || (implList.includes(dev) && DEV_STAGES.has(t.Stage));
     });
     if (!devTickets.length) return `
       <div class="dev-card dev-card-empty">
@@ -1539,8 +1541,8 @@ function renderDevCards(active) {
       const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
       const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const pct  = STAGE_PCT[t.Stage] || 0;
-      const role = devList.includes(dev) ? 'Dev'
-                 : testList.includes(dev) ? 'Test'
+      const role = (devList.includes(dev)  && DEV_PHASE_STAGES.has(t.Stage))  ? 'Dev'
+                 : (testList.includes(dev) && TEST_PHASE_STAGES.has(t.Stage)) ? 'Test'
                  : (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev) ? 'Impl'
                  : 'Assigned';
       const pCls = 'p-' + slug(t.Priority || '');
@@ -1682,9 +1684,9 @@ function renderCharts(active) {
       const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
       const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const implList = (t['PIC Impl'] || '').split(',').map(v => v.trim());
-      return DEV_STAGES.has(t.Stage) && (
-        devList.includes(dev) || testList.includes(dev) || implList.includes(dev)
-      );
+      return (devList.includes(dev)  && DEV_PHASE_STAGES.has(t.Stage))
+          || (testList.includes(dev) && TEST_PHASE_STAGES.has(t.Stage))
+          || (implList.includes(dev) && DEV_STAGES.has(t.Stage));
     }).length
   );
   chartDev = new Chart(document.getElementById('chart-dev'), {
