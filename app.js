@@ -43,7 +43,7 @@ const STAGE_PCT = {
 };
 
 const MS_CONFIGS = {
-  stage:    { placeholder: 'All Stages',   options: STAGES },
+  stage:    { placeholder: 'All Stages',   options: [...STAGES, 'Not set'] },
   type:     { placeholder: 'All Types',    options: ['Support Ticket','Email Request','Verbal Request','Development CR','Testing','Others'] },
   status:   { placeholder: 'All Status',   options: ['Open','In Progress','Pending','Resolved','Closed'] },
   priority: { placeholder: 'All Priority', options: ['Critical','High','Medium','Low'] }
@@ -465,7 +465,7 @@ function applyFilters() {
     if (hideResolved && st.size === 0 && (t.Status === 'Resolved' || t.Status === 'Closed')) return false;
     if (q  && !['Title','Description','ID','Requester','Notes','Project','Jira Ref','Change Ticket No'].some(k => (t[k]||'').toLowerCase().includes(q))) return false;
     if (sr && t.Source      !== sr) return false;
-    if (sg.size && !sg.has(t.Stage    || '')) return false;
+    if (sg.size && !sg.has(t.Stage    || 'Not set')) return false;
     if (ty.size && !ty.has(t.Type     || '')) return false;
     if (st.size && !st.has(t.Status   || '')) return false;
     if (pr.size && !pr.has(t.Priority || '')) return false;
