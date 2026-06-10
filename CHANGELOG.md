@@ -2,6 +2,14 @@
 
 ---
 
+## 2026-06-09
+
+### Filters — Application & Assignee
+- Fixed Assignee filter dropdown being empty on load: `refreshAssigneeDropdown()` now runs after tickets are loaded, not only after the separately-loaded assignees list resolves (race condition fix)
+- Fixed Application field not being saved by the backend: `TICKET_HEADERS`, `createTicket`, and `updateTicket` in `apps-script.gs` now include `Application` as a persisted column (requires one-time manual step: add "Application" header in column 24 of the existing Tickets sheet, then redeploy the Apps Script)
+
+---
+
 ## 2026-06-08
 
 ### Dashboard — Developer Workload Cards

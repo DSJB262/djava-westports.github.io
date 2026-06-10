@@ -291,6 +291,7 @@ async function loadTickets() {
     if (data.jiraError) showBanner('jira-warning', '⚠️', 'Jira issue: ' + data.jiraError, '#FEF3C7', '#92400E');
     renderTable(tickets);
     renderStats(tickets);
+    refreshAssigneeDropdown();
   } catch (err) {
     document.getElementById('loading').classList.add('hidden');
     const es = document.getElementById('empty-state');
