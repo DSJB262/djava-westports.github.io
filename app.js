@@ -1371,7 +1371,7 @@ async function loadCabDashboard() {
   try {
     const data = await apiGet({ action: 'getCabDashboard' });
     if (data.error) throw new Error(data.error);
-    const list = Array.isArray(data) ? data : [];
+    const list = (Array.isArray(data) ? data : []).filter(t => t.Status !== 'Resolved');
     loadEl.classList.add('hidden');
     renderCabSummary(list);
     renderCabTable(list, tableEl, emptyEl);

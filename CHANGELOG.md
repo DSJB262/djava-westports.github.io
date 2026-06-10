@@ -2,6 +2,13 @@
 
 ---
 
+## 2026-06-10
+
+### CAB Pipeline
+- Resolved tickets no longer appear in the CAB Pipeline table or summary counts (`loadCabDashboard` now filters out `Status === 'Resolved'`)
+
+---
+
 ## 2026-06-09
 
 ### Filters — Application & Assignee
