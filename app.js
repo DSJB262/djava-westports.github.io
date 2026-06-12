@@ -1810,10 +1810,10 @@ function x(s) {
 const APP_VERSIONS = {
   'ver-cbas-web':  '2.75.2',
   'ver-cbas-vm':   '2.73.0',
-  'ver-scss-wdc':  '5.54.4',
-  'ver-scss-rgs':  '5.54.0',
-  'ver-scss-ags':  '5.6.0',
-  'ver-scss-swim': '5.54.0',
+  'ver-scss-wdc':  '5.54.5',
+  'ver-scss-rgs':  '5.55.2',
+  'ver-scss-ags':  '5.6.2',
+  'ver-scss-swim': '5.55.2',
   'ver-scss-cm':   '5.54.2',
   'ver-scss-web':  '5.54.2',
   'ver-cronjob':   '1.7.0',
@@ -1826,5 +1826,5 @@ function initVersionsView() {
     if (el) el.textContent = ver;
   });
   const upd = document.getElementById('versions-last-updated');
-  if (upd) upd.textContent = '26 May 2026';
+  if (upd) upd.textContent = '12 Jun 2026';
 }

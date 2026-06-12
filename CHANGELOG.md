@@ -2,6 +2,13 @@
 
 ---
 
+## 2026-06-12
+
+### App Versions
+- Updated deployed version numbers: SCSS WDC 5.54.4 → 5.54.5, SCSS RGS 5.54.0 → 5.55.2, SCSS SWIM 5.54.0 → 5.55.2, SCSS AGS 5.6.0 → 5.6.2
+
+---
+
 ## 2026-06-10
 
 ### CAB Pipeline
