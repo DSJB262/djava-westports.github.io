@@ -9,6 +9,38 @@
 
 ---
 
+## 2026-06-12
+
+### App Versions
+- Updated deployed version numbers: SCSS WDC 5.54.4 → 5.54.5, SCSS RGS 5.54.0 → 5.55.2, SCSS SWIM 5.54.0 → 5.55.2, SCSS AGS 5.6.0 → 5.6.2
+
+---
+
+## 2026-06-10
+
+### CAB Pipeline
+- Resolved tickets no longer appear in the CAB Pipeline table or summary counts (`loadCabDashboard` now filters out `Status === 'Resolved'`)
+
+---
+
+## 2026-06-09
+
+### Filters — Application & Assignee
+- Fixed Assignee filter dropdown being empty on load: `refreshAssigneeDropdown()` now runs after tickets are loaded, not only after the separately-loaded assignees list resolves (race condition fix)
+- Fixed Application field not being saved by the backend: `TICKET_HEADERS`, `createTicket`, and `updateTicket` in `apps-script.gs` now include `Application` as a persisted column (requires one-time manual step: add "Application" header in column 24 of the existing Tickets sheet, then redeploy the Apps Script)
+
+---
+
+## 2026-06-08
+
+### Dashboard — Developer Workload Cards
+- Fixed dev/test workload cards (and matching chart counts) to match a ticket to a developer based on **role + current stage**, not just role:
+  - A ticket only counts as **Dev** work for someone if they're the assigned developer (`PIC Dev`) **and** the ticket is in `Pending Development` / `Development In Progress`
+  - A ticket only counts as **Test** work for someone if they're the assigned tester (`PIC Test`) **and** the ticket is in `Pending Testing` / `Testing In Progress`
+- Effect: once a developer's ticket moves to **Testing In Progress**, it no longer lingers under that developer's card (unless they're also the assigned tester); tickets in **Development In Progress** / **Pending Development** continue to show under the assigned developer
+
+---
+
 ## 2026-05-29
 
 ### Sidebar & Filters

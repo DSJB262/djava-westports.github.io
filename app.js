@@ -43,7 +43,7 @@ const STAGE_PCT = {
 };
 
 const MS_CONFIGS = {
-  stage:    { placeholder: 'All Stages',   options: STAGES },
+  stage:    { placeholder: 'All Stages',   options: [...STAGES, 'Not set'] },
   type:     { placeholder: 'All Types',    options: ['Support Ticket','Email Request','Verbal Request','Development CR','Testing','Others'] },
   status:   { placeholder: 'All Status',   options: ['Open','In Progress','Pending','Resolved','Closed'] },
   priority: { placeholder: 'All Priority', options: ['Critical','High','Medium','Low'] }
@@ -89,6 +89,8 @@ const DEV_STAGES = new Set([
   'Pending Development', 'Development In Progress',
   'Pending Testing', 'Testing In Progress'
 ]);
+const DEV_PHASE_STAGES  = new Set(['Pending Development', 'Development In Progress']);
+const TEST_PHASE_STAGES = new Set(['Pending Testing', 'Testing In Progress']);
 const SUPPORT_STAGES = new Set([
   'Requested / Reported', 'Troubleshooting / Investigation'
 ]);
@@ -289,6 +291,7 @@ async function loadTickets() {
     if (data.jiraError) showBanner('jira-warning', '⚠️', 'Jira issue: ' + data.jiraError, '#FEF3C7', '#92400E');
     renderTable(tickets);
     renderStats(tickets);
+    refreshAssigneeDropdown();
   } catch (err) {
     document.getElementById('loading').classList.add('hidden');
     const es = document.getElementById('empty-state');
@@ -463,7 +466,7 @@ function applyFilters() {
     if (hideResolved && st.size === 0 && (t.Status === 'Resolved' || t.Status === 'Closed')) return false;
     if (q  && !['Title','Description','ID','Requester','Notes','Project','Jira Ref','Change Ticket No'].some(k => (t[k]||'').toLowerCase().includes(q))) return false;
     if (sr && t.Source      !== sr) return false;
-    if (sg.size && !sg.has(t.Stage    || '')) return false;
+    if (sg.size && !sg.has(t.Stage    || 'Not set')) return false;
     if (ty.size && !ty.has(t.Type     || '')) return false;
     if (st.size && !st.has(t.Status   || '')) return false;
     if (pr.size && !pr.has(t.Priority || '')) return false;
@@ -1147,13 +1150,10 @@ async function loadAssignees() {
 
 function refreshAssigneeDropdown() {
   const sel = document.getElementById('filter-assignee'), cur = sel.value;
-  const activeNames = new Set(
-    tickets.filter(t => t.Status !== 'Closed' && t.Status !== 'Resolved' && t.Assignee).map(t => t.Assignee)
-  );
-  const list = assignees.filter(a => activeNames.has(a.name));
+  const names = [...new Set(tickets.filter(t => t.Assignee).map(t => t.Assignee))].sort();
   sel.innerHTML = '<option value="">All Assignees</option>' +
-    list.map(a => `<option value="${x(a.name)}">${x(a.name)}</option>`).join('');
-  sel.value = activeNames.has(cur) ? cur : '';
+    names.map(n => `<option value="${x(n)}">${x(n)}</option>`).join('');
+  sel.value = names.includes(cur) ? cur : '';
 }
 
 function fillAssigneeSelect(selId, selected) {
@@ -1371,7 +1371,7 @@ async function loadCabDashboard() {
   try {
     const data = await apiGet({ action: 'getCabDashboard' });
     if (data.error) throw new Error(data.error);
-    const list = Array.isArray(data) ? data : [];
+    const list = (Array.isArray(data) ? data : []).filter(t => t.Status !== 'Resolved');
     loadEl.classList.add('hidden');
     renderCabSummary(list);
     renderCabTable(list, tableEl, emptyEl);
@@ -1527,9 +1527,9 @@ function renderDevCards(active) {
       const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
       const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const implList = (t['PIC Impl'] || '').split(',').map(v => v.trim());
-      return DEV_STAGES.has(t.Stage) && (
-        devList.includes(dev) || testList.includes(dev) || implList.includes(dev)
-      );
+      return (devList.includes(dev)  && DEV_PHASE_STAGES.has(t.Stage))
+          || (testList.includes(dev) && TEST_PHASE_STAGES.has(t.Stage))
+          || (implList.includes(dev) && DEV_STAGES.has(t.Stage));
     });
     if (!devTickets.length) return `
       <div class="dev-card dev-card-empty">
@@ -1542,8 +1542,8 @@ function renderDevCards(active) {
       const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
       const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const pct  = STAGE_PCT[t.Stage] || 0;
-      const role = devList.includes(dev) ? 'Dev'
-                 : testList.includes(dev) ? 'Test'
+      const role = (devList.includes(dev)  && DEV_PHASE_STAGES.has(t.Stage))  ? 'Dev'
+                 : (testList.includes(dev) && TEST_PHASE_STAGES.has(t.Stage)) ? 'Test'
                  : (t['PIC Impl'] || '').split(',').map(v => v.trim()).includes(dev) ? 'Impl'
                  : 'Assigned';
       const pCls = 'p-' + slug(t.Priority || '');
@@ -1685,9 +1685,9 @@ function renderCharts(active) {
       const devList  = (t['PIC Dev']  || '').split(',').map(v => v.trim());
       const testList = (t['PIC Test'] || '').split(',').map(v => v.trim());
       const implList = (t['PIC Impl'] || '').split(',').map(v => v.trim());
-      return DEV_STAGES.has(t.Stage) && (
-        devList.includes(dev) || testList.includes(dev) || implList.includes(dev)
-      );
+      return (devList.includes(dev)  && DEV_PHASE_STAGES.has(t.Stage))
+          || (testList.includes(dev) && TEST_PHASE_STAGES.has(t.Stage))
+          || (implList.includes(dev) && DEV_STAGES.has(t.Stage));
     }).length
   );
   chartDev = new Chart(document.getElementById('chart-dev'), {
@@ -1810,10 +1810,10 @@ function x(s) {
 const APP_VERSIONS = {
   'ver-cbas-web':  '2.75.2',
   'ver-cbas-vm':   '2.73.0',
-  'ver-scss-wdc':  '5.54.4',
-  'ver-scss-rgs':  '5.54.0',
-  'ver-scss-ags':  '5.6.0',
-  'ver-scss-swim': '5.54.0',
+  'ver-scss-wdc':  '5.54.5',
+  'ver-scss-rgs':  '5.55.2',
+  'ver-scss-ags':  '5.6.2',
+  'ver-scss-swim': '5.55.2',
   'ver-scss-cm':   '5.54.2',
   'ver-scss-web':  '5.54.2',
   'ver-cronjob':   '1.7.0',
@@ -1826,5 +1826,5 @@ function initVersionsView() {
     if (el) el.textContent = ver;
   });
   const upd = document.getElementById('versions-last-updated');
-  if (upd) upd.textContent = '26 May 2026';
+  if (upd) upd.textContent = '12 Jun 2026';
 }
