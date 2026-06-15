@@ -2,6 +2,13 @@
 
 ---
 
+## 2026-06-15
+
+### Developers
+- Added **Justin** to the developer list (PIC Dev/Test dropdowns, Dev Workload & Support dashboard cards, Dev workload chart)
+
+---
+
 ## 2026-05-29
 
 ### Sidebar & Filters

@@ -50,7 +50,7 @@ const MS_CONFIGS = {
 };
 const msState = {};
 
-const DEVS  = ['Akmal','Indra','Mahmood','Razin','Jay','Joseph'];
+const DEVS  = ['Akmal','Indra','Mahmood','Razin','Jay','Joseph','Justin'];
 const IMPLS = ['Sharron - warfile','Yusuf - DB','Fikri - DB'];
 
 const JIRA_APP_MAP = {
